@@ -1,0 +1,456 @@
+// SVY — CEFR / IELTS / Multilevel prep platform
+// Postgres + Prisma. Keep this the single source of truth for the data model.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────── Enums ─────────────────────────
+
+enum Role {
+  OWNER
+  ADMIN
+  COACH
+  DEVELOPER
+  STUDENT
+}
+
+enum Track {
+  IELTS
+  CEFR
+  MULTILEVEL
+  SAT // future exam — schema-ready, UI rolls out later
+}
+
+enum Skill {
+  LISTENING
+  READING
+  SPEAKING
+  WRITING
+}
+
+enum TaskType {
+  PRACTICE // single-skill practice set
+  MOCK // exam-style section
+  FULL // full multi-section test
+  PLACEMENT // used by the placement test
+}
+
+enum TaskStatus {
+  DRAFT
+  PENDING_REVIEW // coach submitted, awaits moderation
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum CefrLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+enum QuestionType {
+  TRUE_FALSE_NOTGIVEN
+  YES_NO_NOTGIVEN
+  MULTIPLE_CHOICE // one correct
+  MULTI_SELECT // several correct
+  MATCHING
+  MATCHING_HEADINGS
+  SENTENCE_COMPLETION
+  SUMMARY_COMPLETION
+  NOTE_COMPLETION
+  TABLE_COMPLETION
+  SHORT_ANSWER
+  LABELLING
+  ESSAY // writing — graded by AI/coach
+  SPEAKING_PROMPT // speaking — recorded, graded by AI/coach
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+}
+
+enum SeminarPlatform {
+  GOOGLE_MEET
+  YOUTUBE_LIVE
+  ZOOM
+  JITSI
+}
+
+enum VerificationPurpose {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
+// ───────────────────────── Users & auth ─────────────────────────
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  phone         String?    @unique
+  passwordHash  String?
+  googleId      String?    @unique
+  firstName     String?
+  lastName      String?
+  name          String? // optional display fallback
+  role          Role       @default(STUDENT)
+  cefrLevel     CefrLevel?
+  locale        String     @default("en")
+  emailVerified DateTime?
+  phoneVerified DateTime?
+  lastActiveAt  DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  sessions      Session[]
+  subscriptions Subscription[]
+  attempts      Attempt[]
+  authoredTasks Task[]                @relation("TaskAuthor")
+  progress      SkillProgress[]
+  placement     PlacementResult[]
+  seminars      SeminarRegistration[]
+  // coach ↔ students
+  coachLinks    CoachStudent[]        @relation("CoachSide")
+  studentLinks  CoachStudent[]        @relation("StudentSide")
+
+  @@index([role])
+}
+
+// Refresh-token session for rotation/revocation. The signed refresh JWT
+// carries this row's id (sid); a missing/revoked row invalidates it.
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent String?
+  ip        String?
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  @@index([userId])
+}
+
+// Email-delivered one-time codes (registration verify + password reset).
+// We send the "SMS-style" code over email to avoid SMS gateway costs.
+model VerificationCode {
+  id         String              @id @default(cuid())
+  email      String
+  codeHash   String // store a hash of the 6-digit code, never plaintext
+  purpose    VerificationPurpose
+  expiresAt  DateTime
+  consumedAt DateTime?
+  attempts   Int                 @default(0)
+  createdAt  DateTime            @default(now())
+
+  @@index([email, purpose])
+}
+
+// Coach assigned to a student (many-to-many).
+model CoachStudent {
+  id        String   @id @default(cuid())
+  coachId   String
+  studentId String
+  coach     User     @relation("CoachSide", fields: [coachId], references: [id], onDelete: Cascade)
+  student   User     @relation("StudentSide", fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([coachId, studentId])
+  @@index([studentId])
+}
+
+// ───────────────────────── Billing ─────────────────────────
+
+model Plan {
+  id         String   @id @default(cuid())
+  code       String   @unique // "monthly" | "quarterly" | "yearly"
+  name       String
+  priceUzs   Int // current price
+  periodDays Int // 30 / 90 / 365
+  perks      String[]
+  highlight  Boolean  @default(false)
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  subscriptions Subscription[]
+  priceHistory  PriceHistory[]
+  promoCodes    PromoCode[]
+}
+
+// Audit of price changes (OWNER only). Lets us grandfather existing subs.
+model PriceHistory {
+  id            String   @id @default(cuid())
+  planId        String
+  plan          Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  priceUzs      Int
+  effectiveFrom DateTime @default(now())
+  changedById   String?
+  createdAt     DateTime @default(now())
+
+  @@index([planId])
+}
+
+model PromoCode {
+  id             String       @id @default(cuid())
+  code           String       @unique
+  discountType   DiscountType
+  amount         Int // percent (1-100) or fixed UZS
+  planId         String? // null = applies to any plan
+  plan           Plan?        @relation(fields: [planId], references: [id])
+  maxRedemptions Int? // null = unlimited
+  redemptions    Int          @default(0)
+  validFrom      DateTime     @default(now())
+  validUntil     DateTime?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  userId             String
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId             String
+  plan               Plan               @relation(fields: [planId], references: [id])
+  status             SubscriptionStatus @default(ACTIVE)
+  priceUzsAtPurchase Int // grandfathered price
+  promoCodeId        String?
+  promoCode          PromoCode?         @relation(fields: [promoCodeId], references: [id])
+  startedAt          DateTime           @default(now())
+  currentPeriodEnd   DateTime
+  canceledAt         DateTime?
+  createdAt          DateTime           @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ───────────────────────── Content: tasks ─────────────────────────
+
+model Task {
+  id           String     @id @default(cuid())
+  slug         String     @unique
+  title        String
+  track        Track
+  skill        Skill
+  type         TaskType   @default(PRACTICE)
+  status       TaskStatus @default(DRAFT)
+  cefrLevel    CefrLevel?
+  ieltsBandMin Float?
+  ieltsBandMax Float?
+  durationMin  Int        @default(20)
+  topics       String[]
+  source       String? // original filename / provenance
+
+  instructions String?
+  passageHtml  String? // reading passage / writing prompt context
+  audioUrl     String? // listening audio (R2)
+  transcript   String? // listening transcript
+
+  authorId    String?
+  author      User?     @relation("TaskAuthor", fields: [authorId], references: [id])
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  groups    QuestionGroup[]
+  questions Question[]
+  attempts  Attempt[]
+
+  @@index([track, skill, status])
+  @@index([status])
+}
+
+// A block of questions sharing one instruction (typical IELTS "Questions 1-5...").
+model QuestionGroup {
+  id          String       @id @default(cuid())
+  taskId      String
+  task        Task         @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  order       Int
+  type        QuestionType
+  instruction String
+  // shared payload for the group (e.g. heading bank, matching options)
+  data        Json?
+  questions   Question[]
+
+  @@index([taskId])
+}
+
+model Question {
+  id          String         @id @default(cuid())
+  taskId      String
+  task        Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  groupId     String?
+  group       QuestionGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  order       Int
+  type        QuestionType
+  prompt      String
+  // type-specific payload: { options?, blanks?, headings?, rows?, ... }
+  data        Json?
+  // correct answer(s): string | string[] depending on type
+  answer      Json
+  explanation String?
+  points      Int            @default(1)
+
+  answers Answer[]
+
+  @@index([taskId])
+}
+
+// ───────────────────────── Attempts & progress ─────────────────────────
+
+model Attempt {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId       String
+  task         Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  status       AttemptStatus @default(IN_PROGRESS)
+  score        Int? // raw correct points
+  totalPoints  Int?
+  bandEstimate Float? // IELTS band, when applicable
+  timeSpentSec Int?
+  startedAt    DateTime      @default(now())
+  submittedAt  DateTime?
+  gradedAt     DateTime?
+
+  answers Answer[]
+
+  @@index([userId])
+  @@index([taskId])
+}
+
+model Answer {
+  id            String   @id @default(cuid())
+  attemptId     String
+  attempt       Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId    String
+  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  response      Json // learner's answer
+  isCorrect     Boolean?
+  pointsAwarded Int?
+  // AI/coach feedback for essay/speaking
+  feedback      String?
+  createdAt     DateTime @default(now())
+
+  @@unique([attemptId, questionId])
+}
+
+// Denormalized per-skill progress for fast dashboards.
+model SkillProgress {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  track          Track
+  skill          Skill
+  testsCompleted Int      @default(0)
+  avgScorePct    Float    @default(0)
+  bandEstimate   Float?
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, track, skill])
+}
+
+model PlacementResult {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cefrLevel         CefrLevel
+  ieltsBandEstimate Float?
+  details           Json?
+  takenAt           DateTime  @default(now())
+
+  @@index([userId])
+}
+
+// ───────────────────────── Seminars ─────────────────────────
+
+model Seminar {
+  id           String          @id @default(cuid())
+  title        String
+  description  String?
+  platform     SeminarPlatform @default(GOOGLE_MEET)
+  joinUrl      String?
+  recordingUrl String?
+  scheduledAt  DateTime
+  durationMin  Int             @default(60)
+  isFree       Boolean         @default(true)
+  hostId       String?
+  createdAt    DateTime        @default(now())
+
+  registrations SeminarRegistration[]
+
+  @@index([scheduledAt])
+}
+
+model SeminarRegistration {
+  id        String   @id @default(cuid())
+  seminarId String
+  seminar   Seminar  @relation(fields: [seminarId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([seminarId, userId])
+}
+
+// ───────────────────────── Optional content (phase 2) ─────────────────────────
+
+model VocabSet {
+  id        String      @id @default(cuid())
+  slug      String      @unique
+  title     String
+  cefrLevel CefrLevel
+  createdAt DateTime    @default(now())
+  words     VocabWord[]
+}
+
+model VocabWord {
+  id      String   @id @default(cuid())
+  setId   String
+  set     VocabSet @relation(fields: [setId], references: [id], onDelete: Cascade)
+  word    String
+  meaning String
+  example String?
+
+  @@index([setId])
+}
+
+model GrammarLesson {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  title     String
+  cefrLevel CefrLevel
+  minutes   Int       @default(10)
+  summary   String?
+  bodyHtml  String?
+  isFree    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+}

@@ -1,0 +1,68 @@
+# SVY platform — local / single-host stack.
+#   docker compose up --build       start everything
+#   make db-push && make db-seed     create schema + seed demo data
+# The web service reads secrets from .env (see .env.example).
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: svy-web
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Override the host-oriented values from .env so the container reaches the
+      # sibling services by their compose service names instead of localhost.
+      DATABASE_URL: postgresql://svy:svy@postgres:5432/svy?schema=public
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: svy-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: svy
+      POSTGRES_PASSWORD: svy
+      POSTGRES_DB: svy
+    ports:
+      - "5433:5432"
+    volumes:
+      - svy-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U svy -d svy"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: svy-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - svy-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  svy-postgres-data:
+  svy-redis-data:
