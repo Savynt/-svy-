@@ -5,9 +5,10 @@ import {
   Users,
   Tags,
   BarChart3,
-  ShieldCheck,
   CircleDollarSign,
   ExternalLink,
+  FileText,
+  PenSquare,
 } from 'lucide-react'
 import { requireRole } from '@/lib/auth/session'
 import { can } from '@/lib/rbac'
@@ -33,7 +34,8 @@ interface NavItem {
 const NAV: NavItem[] = [
   { href: '/admin', label: 'Overview', icon: LayoutDashboard },
   { href: '/admin/users', label: 'Users', icon: Users },
-  { href: '/admin/content', label: 'Content', icon: ShieldCheck },
+  { href: '/coach/tasks/new', label: 'Build test', icon: PenSquare },
+  { href: '/admin/content', label: 'Tasks', icon: FileText },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/admin/pricing', label: 'Pricing', icon: Tags, ownerOnly: true },
 ]
