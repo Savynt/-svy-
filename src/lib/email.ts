@@ -51,12 +51,15 @@ async function deliver(message: EmailMessage): Promise<void> {
     return
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transport = nodemailer.createTransport({
     host: smtp.host,
     port: smtp.port,
     secure: smtp.secure,
     auth: { user: smtp.user, pass: smtp.pass },
-  })
+    // Railway blocks IPv6 outbound — force IPv4 to reach smtp.gmail.com
+    family: 4,
+  } as any)
 
   await transport.sendMail({
     from: `"${APP_NAME}" <${smtp.from}>`,
