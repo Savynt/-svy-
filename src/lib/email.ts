@@ -1,33 +1,7 @@
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'SVY'
-
-interface SmtpConfig {
-  host: string
-  port: number
-  user: string
-  pass: string
-  from: string
-  secure: boolean
-}
-
-function readSmtpConfig(): SmtpConfig | null {
-  const host = process.env.SMTP_HOST
-  const user = process.env.SMTP_USER
-  const pass = process.env.SMTP_PASS
-  if (!host || !user || !pass) return null
-
-  const port = Number(process.env.SMTP_PORT ?? '587')
-  return {
-    host,
-    port: Number.isFinite(port) ? port : 587,
-    user,
-    pass,
-    from: process.env.SMTP_FROM ?? user,
-    // port 465 = implicit TLS (secure: true); 587 = STARTTLS (secure: false)
-    secure: process.env.SMTP_SECURE === 'true' || port === 465,
-  }
-}
+const FROM_ADDRESS = process.env.SMTP_FROM ?? `noreply@${process.env.NEXT_PUBLIC_APP_URL?.replace(/^https?:\/\//, '') ?? 'svy.uz'}`
 
 interface EmailMessage {
   to: string
@@ -36,13 +10,23 @@ interface EmailMessage {
   html?: string
 }
 
-async function deliver(message: EmailMessage): Promise<void> {
-  const smtp = readSmtpConfig()
+// Singleton Resend client — created once per process.
+let _resend: Resend | null = null
 
-  if (!smtp) {
-    // Dev/stub mode — print to console so local flows are testable.
+function getResend(): Resend | null {
+  const key = process.env.RESEND_API_KEY
+  if (!key) return null
+  if (!_resend) _resend = new Resend(key)
+  return _resend
+}
+
+async function deliver(message: EmailMessage): Promise<void> {
+  const resend = getResend()
+
+  if (!resend) {
+    // Dev/stub mode — no API key configured.
     console.info(
-      `\n──────────── ${APP_NAME} EMAIL (no SMTP configured) ────────────\n` +
+      `\n──────────── ${APP_NAME} EMAIL (no RESEND_API_KEY) ────────────\n` +
         `To:      ${message.to}\n` +
         `Subject: ${message.subject}\n` +
         `${message.text}\n` +
@@ -51,23 +35,17 @@ async function deliver(message: EmailMessage): Promise<void> {
     return
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const transport = nodemailer.createTransport({
-    host: smtp.host,
-    port: smtp.port,
-    secure: smtp.secure,
-    auth: { user: smtp.user, pass: smtp.pass },
-    // Railway blocks IPv6 outbound — force IPv4 to reach smtp.gmail.com
-    family: 4,
-  } as any)
-
-  await transport.sendMail({
-    from: `"${APP_NAME}" <${smtp.from}>`,
+  const { error } = await resend.emails.send({
+    from: `${APP_NAME} <${FROM_ADDRESS}>`,
     to: message.to,
     subject: message.subject,
     text: message.text,
     ...(message.html ? { html: message.html } : {}),
   })
+
+  if (error) {
+    throw new Error(`Resend error: ${error.message}`)
+  }
 }
 
 export async function sendVerificationEmail(email: string, code: string): Promise<void> {
