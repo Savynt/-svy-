@@ -111,10 +111,15 @@ export function TestRunner({ task }: { task: RunnerTask }) {
   const flatQuestions = useMemo(() => task.groups.flatMap((g) => g.questions), [task.groups])
   const totalQuestions = flatQuestions.length
 
-  // Map questionId -> sequential 1-based display number.
+  // Map questionId -> display number.
+  // Uses data.numbered if the question carries an explicit exam number (e.g. 14–26
+  // for IELTS Passage 2), otherwise falls back to sequential 1-based index.
   const numberById = useMemo(() => {
     const m = new Map<string, number>()
-    flatQuestions.forEach((q, i) => m.set(q.id, i + 1))
+    flatQuestions.forEach((q, i) => {
+      const explicit = q.data && typeof q.data.numbered === 'number' ? q.data.numbered : null
+      m.set(q.id, explicit ?? i + 1)
+    })
     return m
   }, [flatQuestions])
 

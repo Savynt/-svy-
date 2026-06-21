@@ -58,8 +58,13 @@ function readOptions(data: Record<string, unknown> | null): RunnerOption[] {
       if (typeof o === 'string') return { key: String.fromCharCode(65 + i), text: o }
       if (o && typeof o === 'object') {
         const rec = o as Record<string, unknown>
-        const key = typeof rec.key === 'string' ? rec.key : String.fromCharCode(65 + i)
-        const text = typeof rec.text === 'string' ? rec.text : typeof rec.label === 'string' ? rec.label : ''
+        let key = typeof rec.key === 'string' ? rec.key : String.fromCharCode(65 + i)
+        const text = typeof rec.text === 'string' ? rec.text : typeof rec.label === 'string' ? rec.label : key
+        // Normalise composite keys like "A — Provine" or "B — Zimmerman" → "A", "B".
+        // The parser sometimes stores the full option label as the key; stripping the
+        // name suffix fixes badge overflow and answer-key matching (server stores "B").
+        const compositeMatch = /^([A-Za-z0-9]{1,4})\s*[—–-]/.exec(key)
+        if (compositeMatch) key = compositeMatch[1]
         return { key, text }
       }
       return null
@@ -232,7 +237,7 @@ function ChoiceQuestion({
           multi={multi}
           badge={selected.has(o.key) ? undefined : o.key}
         >
-          <span className="font-medium text-navy-500">{o.key}.</span> {o.text}
+          {o.text}
         </ChoiceRow>
       ))}
     </div>
