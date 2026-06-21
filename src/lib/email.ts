@@ -1,20 +1,4 @@
-/**
- * Provider-agnostic email stub.
- *
- * SVY sends the "SMS-style" 6-digit code over EMAIL to avoid SMS gateway costs
- * (BUILD_CONTRACT §7). For now this is a stub: if SMTP_* env vars are present we
- * log that a real send *would* happen; otherwise we print the code to the server
- * console so local/dev flows work end-to-end.
- *
- * TODO(founder): wire a real SMTP transport here once the mailbox is ready.
- *   The founder will provide a working mailbox (e.g. a Gmail/Yandex/Zoho account
- *   or a transactional provider). Read these from the environment — NEVER hardcode
- *   credentials, and keep them out of the repo (add to .env / deployment secrets):
- *     SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM, SMTP_SECURE
- *   Suggested implementation: add `nodemailer` and create a transport from the
- *   vars below, then replace the `deliver()` stub. Until then this is a no-op
- *   that surfaces the code to the console.
- */
+import nodemailer from 'nodemailer'
 
 const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'SVY'
 
@@ -27,7 +11,6 @@ interface SmtpConfig {
   secure: boolean
 }
 
-/** Read SMTP settings from env, or null if not fully configured. */
 function readSmtpConfig(): SmtpConfig | null {
   const host = process.env.SMTP_HOST
   const user = process.env.SMTP_USER
@@ -41,6 +24,7 @@ function readSmtpConfig(): SmtpConfig | null {
     user,
     pass,
     from: process.env.SMTP_FROM ?? user,
+    // port 465 = implicit TLS (secure: true); 587 = STARTTLS (secure: false)
     secure: process.env.SMTP_SECURE === 'true' || port === 465,
   }
 }
@@ -49,34 +33,38 @@ interface EmailMessage {
   to: string
   subject: string
   text: string
+  html?: string
 }
 
-/**
- * The single delivery seam. Swap this body for a real transport (nodemailer,
- * Resend, etc.) when SMTP is wired — every send goes through here.
- */
 async function deliver(message: EmailMessage): Promise<void> {
   const smtp = readSmtpConfig()
 
-  if (smtp) {
-    // TODO(founder): replace this log with an actual SMTP send using `smtp`.
-    // e.g. nodemailer.createTransport({ host, port, secure, auth:{ user, pass } })
-    //        .sendMail({ from: smtp.from, to, subject, text })
+  if (!smtp) {
+    // Dev/stub mode — print to console so local flows are testable.
     console.info(
-      `[email] SMTP configured (${smtp.host}:${smtp.port}); would send "${message.subject}" to ${message.to}. ` +
-        'Real transport not wired yet — see TODO in src/lib/email.ts.',
+      `\n──────────── ${APP_NAME} EMAIL (no SMTP configured) ────────────\n` +
+        `To:      ${message.to}\n` +
+        `Subject: ${message.subject}\n` +
+        `${message.text}\n` +
+        '──────────────────────────────────────────\n',
     )
     return
   }
 
-  // No SMTP configured — dev/stub mode. Surface the message so flows are testable.
-  console.info(
-    `\n──────────── ${APP_NAME} EMAIL (stub) ────────────\n` +
-      `To:      ${message.to}\n` +
-      `Subject: ${message.subject}\n` +
-      `${message.text}\n` +
-      '──────────────────────────────────────────\n',
-  )
+  const transport = nodemailer.createTransport({
+    host: smtp.host,
+    port: smtp.port,
+    secure: smtp.secure,
+    auth: { user: smtp.user, pass: smtp.pass },
+  })
+
+  await transport.sendMail({
+    from: `"${APP_NAME}" <${smtp.from}>`,
+    to: message.to,
+    subject: message.subject,
+    text: message.text,
+    ...(message.html ? { html: message.html } : {}),
+  })
 }
 
 export async function sendVerificationEmail(email: string, code: string): Promise<void> {
@@ -87,6 +75,13 @@ export async function sendVerificationEmail(email: string, code: string): Promis
       `Welcome to ${APP_NAME}!\n\n` +
       `Your email verification code is: ${code}\n\n` +
       'It expires in 10 minutes. If you did not create an account, ignore this email.',
+    html:
+      `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">` +
+      `<h2 style="color:#1e3a5f">Welcome to ${APP_NAME}!</h2>` +
+      `<p>Your email verification code is:</p>` +
+      `<div style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#1e3a5f;padding:16px 0">${code}</div>` +
+      `<p style="color:#6b7280;font-size:14px">It expires in 10 minutes. If you did not create an account, ignore this email.</p>` +
+      `</div>`,
   })
 }
 
@@ -97,6 +92,13 @@ export async function sendPasswordResetEmail(email: string, code: string): Promi
     text:
       `We received a request to reset your ${APP_NAME} password.\n\n` +
       `Your password reset code is: ${code}\n\n` +
-      'It expires in 10 minutes. If you did not request this, you can safely ignore this email.',
+      'It expires in 10 minutes. If you did not request this, ignore this email.',
+    html:
+      `<div style="font-family:sans-serif;max-width:480px;margin:0 auto">` +
+      `<h2 style="color:#1e3a5f">Reset your ${APP_NAME} password</h2>` +
+      `<p>Your password reset code is:</p>` +
+      `<div style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#1e3a5f;padding:16px 0">${code}</div>` +
+      `<p style="color:#6b7280;font-size:14px">It expires in 10 minutes. If you did not request this, ignore this email.</p>` +
+      `</div>`,
   })
 }
