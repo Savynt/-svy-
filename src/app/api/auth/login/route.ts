@@ -4,6 +4,7 @@ import { signAccessToken, signRefreshToken } from '@/lib/auth/jwt'
 import { setAuthCookies } from '@/lib/auth/session'
 import { homeForRole } from '@/lib/rbac'
 import { loginSchema } from '@/lib/validators/auth'
+import { rateLimit, ipFromRequest } from '@/lib/rate-limit'
 
 /** Refresh-session lifetime — matches REFRESH_TOKEN_TTL (30d) used by the JWT. */
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000
@@ -24,6 +25,15 @@ const DUMMY_HASH = '$2b$12$VvI01ukjQ0fpYk8wK6y6VO.exriKNGPWXpNTC5sHKx7mc6aqRlln6
  * password compare to blunt credential stuffing.
  */
 export async function POST(request: Request): Promise<Response> {
+  const ip = ipFromRequest(request)
+  const rl = await rateLimit(`login:${ip}`, 10, 60_000)
+  if (!rl.ok) {
+    return Response.json(
+      { ok: false, error: 'Too many login attempts. Try again in a minute.' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
+    )
+  }
+
   let body: unknown
   try {
     body = await request.json()

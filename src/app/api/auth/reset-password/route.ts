@@ -31,7 +31,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const user = await prisma.user.findUnique({
     where: { email },
-    select: { id: true },
+    select: { id: true, emailVerified: true },
   })
   // Generic invalid-code response whether or not the account exists (no enumeration).
   if (!user) {
@@ -53,10 +53,15 @@ export async function POST(request: Request): Promise<Response> {
   const passwordHash = await hashPassword(password)
 
   // Set the new password and revoke all live sessions in one transaction.
+  // If the user was never verified (rare edge case), treat a successful code
+  // redemption as proof of inbox access and mark the email verified too.
   await prisma.$transaction([
     prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash },
+      data: {
+        passwordHash,
+        ...(!user.emailVerified ? { emailVerified: new Date() } : {}),
+      },
     }),
     prisma.session.updateMany({
       where: { userId: user.id, revokedAt: null },

@@ -12,12 +12,12 @@ import { SEMINARS, type MarketingSeminar } from '@/data/marketing'
 export const metadata: Metadata = {
   title: 'Free live seminars',
   description:
-    'Join free SVY seminars on IELTS, CEFR and Multilevel prep — live on Google Meet and YouTube Live, with recordings afterwards. No subscription required.',
+    'Join free SVY seminars on IELTS, SAT and General English prep — live on Google Meet and YouTube Live, with recordings afterwards. No subscription required.',
   alternates: { canonical: '/seminars' },
   openGraph: {
     title: 'Free SVY seminars — live on Google Meet & YouTube',
     description:
-      'Free live sessions on IELTS, CEFR and Multilevel preparation. Register and get the recording afterwards.',
+      'Free live sessions on IELTS, SAT and General English preparation. Register and get the recording afterwards.',
     url: '/seminars',
   },
 }
@@ -76,7 +76,7 @@ export default function SeminarsPage() {
       <PageHero
         eyebrow="Seminars"
         title="Free live seminars"
-        subtitle="Practical, exam-focused sessions on IELTS, CEFR and Multilevel preparation — streamed live on Google Meet and YouTube Live. Free for everyone, recordings included."
+        subtitle="Practical, exam-focused sessions on IELTS, SAT and General English preparation — streamed live on Google Meet and YouTube Live. Free for everyone, recordings included."
         breadcrumbs={[{ label: 'Seminars' }]}
       >
         <div className="flex flex-wrap items-center gap-2 text-sm text-sky-100">

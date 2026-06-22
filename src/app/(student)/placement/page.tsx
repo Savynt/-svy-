@@ -33,7 +33,7 @@ const HIGHLIGHTS: Highlight[] = [
   {
     icon: Sparkles,
     title: 'A clear next step',
-    body: 'You’ll get your CEFR level, a rough IELTS band and exactly what to study next.',
+    body: 'You’ll get your level assessment and a rough IELTS band — plus exactly what to study next.',
   },
 ]
 

@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { issueCode } from '@/lib/otp'
 import { sendPasswordResetEmail } from '@/lib/email'
 import { forgotSchema } from '@/lib/validators/auth'
+import { rateLimit, ipFromRequest } from '@/lib/rate-limit'
 
 /**
  * POST /api/auth/forgot-password
@@ -13,6 +14,15 @@ import { forgotSchema } from '@/lib/validators/auth'
  * spam a victim's inbox or probe for accounts via timing.
  */
 export async function POST(request: Request): Promise<Response> {
+  const ip = ipFromRequest(request)
+  const rl = await rateLimit(`forgot:${ip}`, 5, 60_000)
+  if (!rl.ok) {
+    return Response.json(
+      { ok: false, error: 'Too many requests. Try again in a minute.' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
+    )
+  }
+
   let body: unknown
   try {
     body = await request.json()

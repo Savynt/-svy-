@@ -36,7 +36,7 @@ interface GroupDraft {
   questions: QuestionDraft[]
 }
 
-const TRACKS = ['IELTS', 'CEFR', 'MULTILEVEL', 'SAT'] as const
+const TRACKS = ['IELTS', 'SAT', 'GENERAL_ENGLISH'] as const
 const SKILLS = ['LISTENING', 'READING', 'SPEAKING', 'WRITING'] as const
 const TASK_TYPES = ['PRACTICE', 'MOCK', 'FULL', 'PLACEMENT'] as const
 const CEFR = ['', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const

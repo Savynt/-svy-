@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/cn'
 
 type Skill = 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
-type Track = 'IELTS' | 'CEFR' | 'MULTILEVEL' | 'SAT'
+type Track = 'IELTS' | 'SAT' | 'GENERAL_ENGLISH' | 'CEFR' | 'MULTILEVEL'
 
 export interface TaskRowProps {
   /** Task id — the row links to /test/[id]. */

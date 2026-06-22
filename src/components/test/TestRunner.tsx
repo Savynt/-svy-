@@ -40,7 +40,7 @@ export interface RunnerTask {
   id: string
   slug: string
   title: string
-  track: 'IELTS' | 'CEFR' | 'MULTILEVEL' | 'SAT'
+  track: 'IELTS' | 'SAT' | 'GENERAL_ENGLISH' | 'CEFR' | 'MULTILEVEL'
   skill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
   type: 'PRACTICE' | 'MOCK' | 'FULL' | 'PLACEMENT'
   cefrLevel: string | null

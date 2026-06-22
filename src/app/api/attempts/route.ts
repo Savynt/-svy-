@@ -88,7 +88,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const task = await prisma.task.findUnique({
-    where: { id: parsed.taskId },
+    where: { id: parsed.taskId, status: 'PUBLISHED' },
     include: { questions: { orderBy: { order: 'asc' } } },
   })
 

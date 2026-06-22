@@ -15,7 +15,8 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { label: 'IELTS', href: '/practice/ielts' },
-  { label: 'Multilevel', href: '/practice/multilevel' },
+  { label: 'SAT', href: '/practice/sat' },
+  { label: 'General English', href: '/practice/general-english' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Seminars', href: '/seminars' },
 ]

@@ -9,9 +9,9 @@ interface FooterLinkItem {
 
 const PREP: FooterLinkItem[] = [
   { label: 'IELTS', href: '/practice/ielts' },
-  { label: 'Multilevel', href: '/practice/multilevel' },
-  { label: 'CEFR levels', href: '/practice' },
-  { label: 'Placement test', href: '/placement' },
+  { label: 'SAT', href: '/practice/sat' },
+  { label: 'General English', href: '/practice/general-english' },
+  { label: 'All practice', href: '/practice' },
 ]
 
 const PLATFORM: FooterLinkItem[] = [
@@ -34,7 +34,7 @@ export function Footer() {
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-sm text-navy-500">
-            IELTS, CEFR &amp; Multilevel preparation for Uzbekistan. Real exam-style tests,
+            IELTS, SAT &amp; General English preparation for Uzbekistan. Real exam-style tests,
             vocabulary and grammar — one simple subscription.
           </p>
           <div className="mt-5 flex gap-2">

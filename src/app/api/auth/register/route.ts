@@ -4,6 +4,7 @@ import { hashPassword } from '@/lib/auth/password'
 import { issueCode } from '@/lib/otp'
 import { sendVerificationEmail } from '@/lib/email'
 import { registerSchema } from '@/lib/validators/auth'
+import { rateLimit, ipFromRequest } from '@/lib/rate-limit'
 
 /**
  * POST /api/auth/register
@@ -15,6 +16,15 @@ import { registerSchema } from '@/lib/validators/auth'
  * the DB writes — registration is a spam/enumeration surface.
  */
 export async function POST(request: Request): Promise<Response> {
+  const ip = ipFromRequest(request)
+  const rl = await rateLimit(`register:${ip}`, 5, 60_000)
+  if (!rl.ok) {
+    return Response.json(
+      { ok: false, error: 'Too many registrations from your IP. Try again in a minute.' },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } },
+    )
+  }
+
   let body: unknown
   try {
     body = await request.json()

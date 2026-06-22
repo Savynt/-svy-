@@ -37,7 +37,7 @@ const QUICK_LINKS: QuickLink[] = [
   {
     href: '/practice',
     title: 'Practice library',
-    blurb: 'Browse every IELTS, CEFR and Multilevel set by skill.',
+    blurb: 'Browse every IELTS, SAT and General English set by skill.',
     icon: Compass,
   },
   {
@@ -236,7 +236,7 @@ export default async function DashboardPage() {
                     Subscribe to unlock everything
                   </h2>
                   <p className="mt-1 text-sm text-navy-500">
-                    Get every IELTS, CEFR and Multilevel test, instant scoring and saved progress —
+                    Get every IELTS, SAT and General English test, instant scoring and saved progress —
                     one simple plan.
                   </p>
                 </div>

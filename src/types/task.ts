@@ -6,7 +6,7 @@ import { z } from 'zod'
  * but is the portable JSON contract (parser output → seed → DB).
  */
 
-export const trackSchema = z.enum(['IELTS', 'CEFR', 'MULTILEVEL', 'SAT'])
+export const trackSchema = z.enum(['IELTS', 'SAT', 'GENERAL_ENGLISH', 'CEFR', 'MULTILEVEL'])
 export const skillSchema = z.enum(['LISTENING', 'READING', 'SPEAKING', 'WRITING'])
 export const taskTypeSchema = z.enum(['PRACTICE', 'MOCK', 'FULL', 'PLACEMENT'])
 export const cefrLevelSchema = z.enum(['A1', 'A2', 'B1', 'B2', 'C1', 'C2'])

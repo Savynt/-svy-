@@ -39,7 +39,7 @@ export const PLANS: MarketingPlan[] = [
     note: 'Best to start — cancel anytime',
     highlight: true,
     perks: [
-      'Full access to all CEFR, IELTS & Multilevel practice',
+      'Full access to all IELTS, SAT & General English practice',
       'Listening, Reading, Speaking & Writing',
       'Vocabulary trainer (A1 → C2)',
       'Grammar lessons & explanations',
@@ -92,8 +92,8 @@ export interface FeatureRow {
 
 /** Plan comparison — core prep is identical; higher tiers add power-user extras. */
 export const FEATURE_ROWS: FeatureRow[] = [
-  { label: 'CEFR practice (all 4 skills)', monthly: true, quarterly: true, yearly: true },
-  { label: 'IELTS & Multilevel full mock tests', monthly: true, quarterly: true, yearly: true },
+  { label: 'General English practice (all 4 skills)', monthly: true, quarterly: true, yearly: true },
+  { label: 'IELTS & SAT full mock tests', monthly: true, quarterly: true, yearly: true },
   { label: 'Vocabulary trainer — A1 to C2', monthly: true, quarterly: true, yearly: true },
   { label: 'Grammar lessons & explanations', monthly: true, quarterly: true, yearly: true },
   { label: 'Progress tracking & band estimates', monthly: true, quarterly: true, yearly: true },
@@ -119,11 +119,11 @@ export const FAQS: FaqItem[] = [
   },
   {
     q: 'Do you add new tests and mocks?',
-    a: 'Regularly. We add fresh CEFR sets and IELTS & Multilevel full mock tests every month. The 3-month and yearly plans get priority access to new material as soon as it ships.',
+    a: 'Regularly. We add fresh General English sets and IELTS & SAT full mock tests every month. The 3-month and yearly plans get priority access to new material as soon as it ships.',
   },
   {
     q: 'Is SVY for school or for work?',
-    a: 'Both. Whether you need a CEFR certificate for university or an IELTS band score for study and work abroad, one subscription covers every track, level and skill.',
+    a: 'Both. Whether you need General English skills for university or an IELTS / SAT score for study and work abroad, one subscription covers every track, level and skill.',
   },
   {
     q: 'Are the live seminars really free?',
@@ -171,28 +171,28 @@ export const SEMINARS: MarketingSeminar[] = [
     tags: ['IELTS', 'Writing'],
   },
   {
-    id: 'cefr-speaking-confidence',
-    title: 'CEFR Speaking: sound fluent at B2 and above',
+    id: 'general-english-speaking-confidence',
+    title: 'General English Speaking: sound fluent and natural',
     description:
-      'Practical phrases, fillers and pacing that examiners reward. We do live mini-mocks and score volunteers against the CEFR descriptors.',
+      'Practical phrases, fillers and pacing that build real confidence. We do live mini-mocks and work on pronunciation, flow and vocabulary range.',
     platform: 'YOUTUBE_LIVE',
     scheduledAt: '2026-06-21T13:00:00.000Z',
     durationMin: 60,
     host: 'Jasur Karimov',
     hasRecording: false,
-    tags: ['CEFR', 'Speaking'],
+    tags: ['General English', 'Speaking'],
   },
   {
-    id: 'multilevel-listening-strategy',
-    title: 'Multilevel Listening: catch every answer',
+    id: 'sat-reading-strategy',
+    title: 'SAT Reading: tackle every question type fast',
     description:
-      'Note-taking systems, keyword prediction and how to recover after you miss an answer. Built around the Uzbekistan Multilevel format.',
+      'Evidence-based reading tips, vocabulary in context, and how to manage the clock. Practice passages with full walkthrough and Q&A.',
     platform: 'GOOGLE_MEET',
     scheduledAt: '2026-06-28T15:00:00.000Z',
     durationMin: 60,
     host: 'Nilufar Abdullayeva',
     hasRecording: false,
-    tags: ['Multilevel', 'Listening'],
+    tags: ['SAT', 'Reading'],
   },
   {
     id: 'ielts-reading-time-management',

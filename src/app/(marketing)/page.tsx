@@ -27,13 +27,13 @@ import { formatUzs } from '@/lib/format'
 type IconType = ComponentType<{ className?: string }>
 
 export const metadata: Metadata = {
-  title: 'IELTS, CEFR & Multilevel prep — one subscription',
+  title: 'IELTS, SAT & General English prep — one subscription',
   description:
-    'Prepare for IELTS, CEFR and the Multilevel national exam with real exam-style mock tests, answer keys, instant scoring and band estimates. One subscription — 20,000 UZS / month. Built for learners in Uzbekistan.',
+    'Prepare for IELTS and SAT with real exam-style mock tests, and build General English skills — answer keys, instant scoring and band estimates. One subscription — 20,000 UZS / month. Built for learners in Uzbekistan.',
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
-    title: 'SVY — IELTS, CEFR & Multilevel preparation',
+    title: 'SVY — IELTS, SAT & General English preparation',
     description:
       'Real exam-style mock tests with answer keys, instant scoring and band estimates. One subscription — 20,000 UZS / month.',
     url: '/',
@@ -51,23 +51,23 @@ const TRACKS: {
   {
     name: 'IELTS',
     scale: 'Bands 4 – 9',
-    focus: 'Launch focus',
-    copy: 'The global exam for studying, working and migrating abroad. Train with full mock tests and aim for the exact band score you need.',
+    focus: 'Global exam',
+    copy: 'The global standard for studying, working and migrating abroad. Train with full mock tests and aim for the exact band score you need.',
     href: '/register',
     highlight: true,
   },
   {
-    name: 'CEFR',
-    scale: 'A1 – C2',
-    focus: 'European standard',
-    copy: 'The level framework used across schools and universities. Climb from A1 to C2 with focused practice in every skill.',
+    name: 'SAT',
+    scale: 'Score 400 – 1600',
+    focus: 'US admissions',
+    copy: 'The exam required for US university admissions. Master evidence-based reading, writing and math with timed practice sets.',
     href: '/register',
   },
   {
-    name: 'Multilevel',
-    scale: 'A2 – C1',
-    focus: 'National UZ exam',
-    copy: 'The Multilevel certificate used for admission and graduation in Uzbekistan. Practise the real format and grading.',
+    name: 'General English',
+    scale: 'Beginner → Advanced',
+    focus: 'Everyday fluency',
+    copy: 'Build real communication skills from the ground up — vocabulary, grammar, speaking and writing for work, travel and daily life.',
     href: '/register',
   },
 ]
@@ -93,7 +93,7 @@ const FEATURES: { icon: IconType; title: string; copy: string }[] = [
   {
     icon: Target,
     title: 'Band & level estimates',
-    copy: 'Get a realistic IELTS band, CEFR level and Multilevel grade for every attempt.',
+    copy: 'Get a realistic IELTS band or SAT score estimate for every attempt.',
   },
   {
     icon: CalendarDays,
@@ -115,7 +115,7 @@ const FEATURES: { icon: IconType; title: string; copy: string }[] = [
 const STEPS: { title: string; copy: string }[] = [
   {
     title: 'Register',
-    copy: 'Create your account and unlock every IELTS, CEFR and Multilevel test for one monthly price.',
+    copy: 'Create your account and unlock every IELTS, SAT and General English test for one monthly price.',
   },
   {
     title: 'Practice',
@@ -128,7 +128,7 @@ const STEPS: { title: string; copy: string }[] = [
 ]
 
 const PLAN_PERKS = [
-  'Full access to IELTS, CEFR & Multilevel tests',
+  'Full access to IELTS, SAT & General English tests',
   'Real mock tests with answer keys',
   'Instant scoring & band estimates',
   'Progress tracking on any device',
@@ -155,7 +155,7 @@ export default function LandingPage() {
             <div className="animate-fade-up">
               <Badge tone="accent">
                 <Sparkles className="h-3.5 w-3.5" />
-                IELTS · CEFR · Multilevel prep
+                IELTS · SAT · General English prep
               </Badge>
               <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
                 Pass your English exam with confidence.
@@ -266,8 +266,8 @@ export default function LandingPage() {
         <SectionHeading
           align="center"
           eyebrow="Choose your exam"
-          title="Three tracks, one platform"
-          subtitle="Whether you need IELTS for abroad, a CEFR level for university or the Multilevel certificate at home, SVY has a full track for you."
+          title="Three ways to prepare"
+          subtitle="Whether you need IELTS or SAT for abroad, or want to build everyday General English skills — SVY has a full track for you."
         />
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {TRACKS.map((track) => (
@@ -431,7 +431,7 @@ export default function LandingPage() {
                   </h3>
                   <p className="mt-2 max-w-xl text-navy-500">
                     Join free online sessions covering exam tactics, common mistakes and how to score
-                    higher across IELTS, CEFR and Multilevel.
+                    higher across IELTS, SAT and General English.
                   </p>
                 </div>
               </div>
@@ -451,7 +451,7 @@ export default function LandingPage() {
             Ready to reach your target score?
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-sky-200">
-            Join learners across Uzbekistan preparing smarter — all IELTS, CEFR and Multilevel
+            Join learners across Uzbekistan preparing smarter — IELTS, SAT &amp; General English
             practice for {formatUzs(PRICE_UZS)} / month.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">

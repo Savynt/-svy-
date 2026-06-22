@@ -19,19 +19,19 @@ import { TaskRow } from '@/components/student/TaskRow'
 export const metadata: Metadata = {
   title: 'Practice',
   description:
-    'Browse the SVY practice library — IELTS, CEFR and Multilevel tests across Listening, Reading, Speaking and Writing.',
+    'Browse the SVY practice library — IELTS, SAT and General English tests across Listening, Reading, Speaking and Writing.',
 }
 
-type Track = 'IELTS' | 'CEFR' | 'MULTILEVEL' | 'SAT'
+type Track = 'IELTS' | 'SAT' | 'GENERAL_ENGLISH' | 'CEFR' | 'MULTILEVEL'
 type Skill = 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
 
 const TRACKS: { track: Track; title: string; blurb: string }[] = [
   { track: 'IELTS', title: 'IELTS', blurb: 'Full exam-style sections scored to the 9-band scale.' },
-  { track: 'CEFR', title: 'CEFR', blurb: 'Level-mapped practice from A1 right through to C2.' },
+  { track: 'SAT', title: 'SAT', blurb: 'Evidence-based reading, writing and math for US admissions.' },
   {
-    track: 'MULTILEVEL',
-    title: 'Multilevel',
-    blurb: 'The national multilevel format, mirrored end to end.',
+    track: 'GENERAL_ENGLISH',
+    title: 'General English',
+    blurb: 'Practical fluency — vocabulary, grammar, speaking and writing for everyday use.',
   },
 ]
 
@@ -145,7 +145,7 @@ export default async function PracticePage() {
                   No practice tests yet
                 </p>
                 <p className="mx-auto mt-1.5 max-w-md text-sm text-navy-500">
-                  Our coaches are preparing IELTS, CEFR and Multilevel sets right now. Check back
+                  Our coaches are preparing IELTS, SAT and General English sets right now. Check back
                   soon — new tests are added regularly.
                 </p>
               </div>

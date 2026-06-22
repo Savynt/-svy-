@@ -1,4 +1,4 @@
-// SVY — CEFR / IELTS / Multilevel prep platform
+// SVY — IELTS / SAT / General English prep platform
 // Postgres + Prisma. Keep this the single source of truth for the data model.
 
 generator client {
@@ -22,9 +22,10 @@ enum Role {
 
 enum Track {
   IELTS
-  CEFR
-  MULTILEVEL
-  SAT // future exam — schema-ready, UI rolls out later
+  SAT
+  GENERAL_ENGLISH
+  CEFR        // legacy — kept for data integrity, hidden in UI
+  MULTILEVEL  // legacy — kept for data integrity, hidden in UI
 }
 
 enum Skill {

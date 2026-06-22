@@ -21,12 +21,12 @@ import { Faq } from './Faq'
 export const metadata: Metadata = {
   title: 'Pricing — one plan, full access',
   description:
-    'Simple pricing for SVY: from 20,000 UZS / month for full access to every CEFR, IELTS and Multilevel practice test, the vocabulary trainer and all grammar lessons. Pay locally with Click, Payme or Uzcard.',
+    'Simple pricing for SVY: from 20,000 UZS / month for full access to every IELTS, SAT and General English practice test, the vocabulary trainer and all grammar lessons. Pay locally with Click, Payme or Uzcard.',
   alternates: { canonical: '/pricing' },
   openGraph: {
     title: 'SVY Pricing — one plan, full access',
     description:
-      'From 20,000 UZS / month. Every CEFR, IELTS and Multilevel test, vocabulary and grammar — pay with Click, Payme or Uzcard.',
+      'From 20,000 UZS / month. Every IELTS, SAT and General English test, vocabulary and grammar — pay with Click, Payme or Uzcard.',
     url: '/pricing',
   },
 }
@@ -57,7 +57,7 @@ export default function PricingPage() {
       <PageHero
         eyebrow="Pricing"
         title="Simple pricing, full access"
-        subtitle="One subscription unlocks every CEFR, IELTS and Multilevel practice test, the vocabulary trainer and all grammar lessons. Pay in UZS with Click, Payme or Uzcard."
+        subtitle="One subscription unlocks every IELTS, SAT and General English practice test, the vocabulary trainer and all grammar lessons. Pay in UZS with Click, Payme or Uzcard."
         breadcrumbs={[{ label: 'Pricing' }]}
       >
         <div className="flex flex-wrap items-center gap-2 text-sm text-sky-100">
@@ -238,7 +238,7 @@ export default function PricingPage() {
                 Start preparing today for {formatUzs(20000)} / month
               </h2>
               <p className="max-w-xl text-sky-100">
-                One subscription, every CEFR, IELTS &amp; Multilevel test, vocabulary and grammar.
+                One subscription, every IELTS, SAT &amp; General English test, vocabulary and grammar.
                 Cancel anytime.
               </p>
               <Button href="/register" variant="accent" size="lg">
