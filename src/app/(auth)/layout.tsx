@@ -5,7 +5,7 @@ import { Logo } from '@/components/Logo'
 export const metadata: Metadata = {
   title: 'Account',
   description:
-    'Sign in or create your SVY account to practice IELTS, CEFR and Multilevel exams with real exam-style tests and instant scoring.',
+    'Sign in or create your SVY account to practice IELTS, SAT and General English with real exam-style tests and instant scoring.',
   robots: { index: false, follow: true },
 }
 
@@ -45,7 +45,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <p className="mt-6 text-center text-xs text-navy-500">
-          IELTS · CEFR · Multilevel preparation, built for Uzbekistan.
+          IELTS · SAT · General English preparation, built for Uzbekistan.
         </p>
       </div>
     </main>

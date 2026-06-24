@@ -104,7 +104,7 @@ export default function RegisterPage() {
           Create your account
         </h1>
         <p className="mt-1.5 text-sm text-navy-500">
-          Start practicing IELTS, CEFR and Multilevel tests today.
+          Start practicing IELTS, SAT and General English tests today.
         </p>
       </header>
 

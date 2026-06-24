@@ -20,12 +20,12 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
   title: {
-    default: 'SVY — IELTS, CEFR & Multilevel preparation',
+    default: 'SVY — IELTS, SAT & General English preparation',
     template: '%s · SVY',
   },
   description:
-    'Practice IELTS, CEFR and Multilevel with real exam-style tests, instant scoring and progress tracking. Built for learners in Uzbekistan.',
-  keywords: ['IELTS', 'CEFR', 'Multilevel', 'English', 'Uzbekistan', 'mock test', 'practice'],
+    'Practice IELTS, SAT and General English with real exam-style tests, instant scoring and progress tracking. Built for learners in Uzbekistan.',
+  keywords: ['IELTS', 'SAT', 'General English', 'English', 'Uzbekistan', 'mock test', 'practice'],
   openGraph: {
     type: 'website',
     siteName: 'SVY',

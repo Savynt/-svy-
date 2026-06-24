@@ -15,10 +15,10 @@ import type { MetadataRoute } from 'next'
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'SVY — IELTS, CEFR & Multilevel',
+    name: 'SVY — IELTS, SAT & General English',
     short_name: 'SVY',
     description:
-      'Practice IELTS, CEFR and Multilevel with real exam-style tests, instant scoring and progress tracking. Built for learners in Uzbekistan.',
+      'Practice IELTS, SAT and General English with real exam-style tests, instant scoring and progress tracking. Built for learners in Uzbekistan.',
     start_url: '/',
     scope: '/',
     display: 'standalone',

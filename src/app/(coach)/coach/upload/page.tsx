@@ -62,10 +62,10 @@ function buildMockPreview(html: string, source: string): PreviewData {
   const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
   const lower = `${source} ${html}`.toLowerCase()
 
-  const track: NormalizedTask['track'] = lower.includes('cefr')
-    ? 'CEFR'
-    : lower.includes('multilevel')
-      ? 'MULTILEVEL'
+  const track: NormalizedTask['track'] = lower.includes('sat')
+    ? 'SAT'
+    : lower.includes('general english') || lower.includes('general_english')
+      ? 'GENERAL_ENGLISH'
       : 'IELTS'
 
   const skill: NormalizedTask['skill'] = lower.includes('listening')

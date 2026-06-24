@@ -14,9 +14,9 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { label: 'IELTS', href: '/practice/ielts' },
-  { label: 'SAT', href: '/practice/sat' },
-  { label: 'General English', href: '/practice/general-english' },
+  { label: 'IELTS', href: '/practice#track-ielts' },
+  { label: 'SAT', href: '/practice#track-sat' },
+  { label: 'General English', href: '/practice#track-general_english' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'Seminars', href: '/seminars' },
 ]
