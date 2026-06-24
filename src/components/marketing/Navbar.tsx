@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { Button } from '@/components/ui/Button'
+import { LanguageSwitcher } from '@/components/ui/LanguageSwitcher'
 import { cn } from '@/lib/cn'
 
 interface NavItem {
@@ -65,6 +66,7 @@ export function Navbar() {
         </ul>
 
         <div className="hidden items-center gap-2 lg:flex">
+          <LanguageSwitcher />
           <Button href="/login" variant="ghost" size="sm">
             Login
           </Button>
@@ -106,6 +108,7 @@ export function Navbar() {
               </li>
             ))}
             <li className="flex flex-col gap-2 pt-2">
+              <LanguageSwitcher className="justify-center" />
               <Button href="/login" variant="secondary" className="w-full" onClick={() => setOpen(false)}>
                 Login
               </Button>

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
+import { LocaleProvider } from '@/i18n/client'
+import { getLocale } from '@/i18n/server'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -41,10 +43,15 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale()
   return (
-    <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
-      <body>{children}</body>
+    <html lang={locale} className={`${inter.variable} ${jakarta.variable}`}>
+      <body>
+        <LocaleProvider locale={locale}>
+          {children}
+        </LocaleProvider>
+      </body>
     </html>
   )
 }
