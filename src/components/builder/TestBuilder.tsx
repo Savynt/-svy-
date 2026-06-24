@@ -39,7 +39,6 @@ interface GroupDraft {
 const TRACKS = ['IELTS', 'SAT', 'GENERAL_ENGLISH'] as const
 const SKILLS = ['LISTENING', 'READING', 'SPEAKING', 'WRITING'] as const
 const TASK_TYPES = ['PRACTICE', 'MOCK', 'FULL', 'PLACEMENT'] as const
-const CEFR = ['', 'A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const
 
 function emptyQuestion(type: BuilderQuestionType): QuestionDraft {
   const hasOptions = BUILDER_TYPE_META[type].hasOptions
@@ -71,7 +70,6 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
   const [track, setTrack] = useState<(typeof TRACKS)[number]>('IELTS')
   const [skill, setSkill] = useState<(typeof SKILLS)[number]>('READING')
   const [taskType, setTaskType] = useState<(typeof TASK_TYPES)[number]>('PRACTICE')
-  const [cefrLevel, setCefrLevel] = useState<(typeof CEFR)[number]>('')
   const [durationMin, setDurationMin] = useState(20)
   const [topics, setTopics] = useState('')
   const [instructions, setInstructions] = useState('')
@@ -185,7 +183,7 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
         track,
         skill,
         type: taskType,
-        cefrLevel: cefrLevel || undefined,
+
         durationMin,
         topics: topics
           .split(',')
@@ -279,14 +277,6 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
               <select className={selectCls} value={taskType} onChange={(e) => setTaskType(e.target.value as typeof taskType)}>
                 {TASK_TYPES.map((t) => (
                   <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>CEFR level</label>
-              <select className={selectCls} value={cefrLevel} onChange={(e) => setCefrLevel(e.target.value as typeof cefrLevel)}>
-                {CEFR.map((c) => (
-                  <option key={c} value={c}>{c || '—'}</option>
                 ))}
               </select>
             </div>
