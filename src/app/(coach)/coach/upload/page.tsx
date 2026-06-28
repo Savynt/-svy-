@@ -213,7 +213,7 @@ export default function CoachUploadPage() {
       const res = await fetch('/api/tasks/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html, source: fileName }),
+        body: JSON.stringify({ html, filename: fileName }),
       })
 
       if (res.ok) {
@@ -244,15 +244,12 @@ export default function CoachUploadPage() {
     setBusy(true)
     setError(null)
     try {
-      const res = await fetch('/api/tasks/import', {
+      const res = await fetch('/api/tasks/import?persist=1', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           html,
-          source: preview.task.source ?? source,
-          commit: true,
-          status: 'PENDING_REVIEW',
-          task: preview.task,
+          filename: preview.task.source ?? source,
         }),
       })
       // Whether or not the route exists yet, surface the "submitted for review"
