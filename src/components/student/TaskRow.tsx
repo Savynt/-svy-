@@ -12,7 +12,7 @@ import { Card, CardBody } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/cn'
 
-type Skill = 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
+type Skill = 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' | 'MATH'
 type Track = 'IELTS' | 'SAT' | 'GENERAL_ENGLISH' | 'CEFR' | 'MULTILEVEL'
 
 export interface TaskRowProps {
@@ -34,6 +34,7 @@ const SKILL_ICON: Record<Skill, LucideIcon> = {
   READING: BookOpen,
   SPEAKING: Mic,
   WRITING: PenLine,
+  MATH: ListChecks,
 }
 
 const SKILL_LABEL: Record<Skill, string> = {
@@ -41,6 +42,7 @@ const SKILL_LABEL: Record<Skill, string> = {
   READING: 'Reading',
   SPEAKING: 'Speaking',
   WRITING: 'Writing',
+  MATH: 'Math',
 }
 
 /** A single task as a tappable list row, linking to the test player. */
