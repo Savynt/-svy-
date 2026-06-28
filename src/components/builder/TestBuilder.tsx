@@ -11,6 +11,8 @@ import {
   BUILDER_QUESTION_TYPES,
   BUILDER_TYPE_META,
   TFNG_VALUES,
+  TRACK_SKILLS,
+  SKILL_ALLOWED_TYPES,
   type BuilderQuestionType,
 } from '@/types/builder'
 
@@ -28,16 +30,17 @@ interface QuestionDraft {
   options: OptionDraft[]
   answerText: string
   explanation: string
+  imageUrl: string
   points: number
 }
 interface GroupDraft {
   type: BuilderQuestionType
   instruction: string
+  explanation: string
   questions: QuestionDraft[]
 }
 
 const TRACKS = ['IELTS', 'SAT', 'GENERAL_ENGLISH'] as const
-const SKILLS = ['LISTENING', 'READING', 'SPEAKING', 'WRITING'] as const
 const TASK_TYPES = ['PRACTICE', 'MOCK', 'FULL', 'PLACEMENT'] as const
 
 function emptyQuestion(type: BuilderQuestionType): QuestionDraft {
@@ -47,13 +50,15 @@ function emptyQuestion(type: BuilderQuestionType): QuestionDraft {
     options: hasOptions ? [{ text: '', correct: false }, { text: '', correct: false }] : [],
     answerText: '',
     explanation: '',
+    imageUrl: '',
     points: type === 'ESSAY' || type === 'SPEAKING_PROMPT' ? 9 : 1,
   }
 }
 
-function emptyGroup(): GroupDraft {
-  const type: BuilderQuestionType = 'MULTIPLE_CHOICE'
-  return { type, instruction: '', questions: [emptyQuestion(type)] }
+function emptyGroup(skill?: string): GroupDraft {
+  const allowed = skill ? SKILL_ALLOWED_TYPES[skill] ?? BUILDER_QUESTION_TYPES : BUILDER_QUESTION_TYPES
+  const type: BuilderQuestionType = allowed[0] ?? 'MULTIPLE_CHOICE'
+  return { type, instruction: '', explanation: '', questions: [emptyQuestion(type)] }
 }
 
 const labelCls = 'mb-1.5 block text-sm font-semibold text-navy-700'
@@ -68,7 +73,7 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
   // meta
   const [title, setTitle] = useState('')
   const [track, setTrack] = useState<(typeof TRACKS)[number]>('IELTS')
-  const [skill, setSkill] = useState<(typeof SKILLS)[number]>('READING')
+  const [skill, setSkill] = useState<string>('READING')
   const [taskType, setTaskType] = useState<(typeof TASK_TYPES)[number]>('PRACTICE')
   const [durationMin, setDurationMin] = useState(20)
   const [topics, setTopics] = useState('')
@@ -78,14 +83,40 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
   const [transcript, setTranscript] = useState('')
   const [publish, setPublish] = useState(false)
 
-  const [groups, setGroups] = useState<GroupDraft[]>([emptyGroup()])
+  const [groups, setGroups] = useState<GroupDraft[]>([emptyGroup('READING')])
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
+  const trackSkills = TRACK_SKILLS[track] ?? TRACK_SKILLS['IELTS']
+  const allowedTypes = SKILL_ALLOWED_TYPES[skill] ?? BUILDER_QUESTION_TYPES
+
   const showPassage = skill === 'READING' || skill === 'WRITING'
   const showAudio = skill === 'LISTENING'
+  const showDesmos = track === 'SAT' && skill === 'MATH'
+  const showExplanation = track === 'GENERAL_ENGLISH'
+
+  function handleTrackChange(newTrack: (typeof TRACKS)[number]) {
+    const skills = TRACK_SKILLS[newTrack] ?? TRACK_SKILLS['IELTS']
+    const newSkill = skills[0]?.value ?? 'READING'
+    setTrack(newTrack)
+    setSkill(newSkill)
+    // reset groups with allowed type for new skill
+    setGroups([emptyGroup(newSkill)])
+  }
+
+  function handleSkillChange(newSkill: string) {
+    setSkill(newSkill)
+    // reset all groups' types to first allowed for new skill
+    const allowed = SKILL_ALLOWED_TYPES[newSkill] ?? BUILDER_QUESTION_TYPES
+    setGroups((gs) => gs.map((g) => {
+      const validType = allowed.includes(g.type) ? g.type : allowed[0]!
+      return validType !== g.type
+        ? { ...g, type: validType, questions: g.questions.map(() => emptyQuestion(validType)) }
+        : g
+    }))
+  }
 
   /* ---- group/question mutation helpers (immutable) ---- */
   const updateGroup = (gi: number, patch: Partial<GroupDraft>) =>
@@ -98,7 +129,7 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
       ),
     )
 
-  const addGroup = () => setGroups((gs) => [...gs, emptyGroup()])
+  const addGroup = () => setGroups((gs) => [...gs, emptyGroup(skill)])
   const removeGroup = (gi: number) => setGroups((gs) => gs.filter((_, i) => i !== gi))
 
   const updateQuestion = (gi: number, qi: number, patch: Partial<QuestionDraft>) =>
@@ -197,11 +228,13 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
         groups: groups.map((g) => ({
           type: g.type,
           instruction: g.instruction,
+          explanation: g.explanation || undefined,
           questions: g.questions.map((q) => ({
             prompt: q.prompt,
             options: q.options,
             answerText: q.answerText,
             explanation: q.explanation || undefined,
+            imageUrl: q.imageUrl || undefined,
             points: q.points,
           })),
         })),
@@ -258,17 +291,17 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <label className={labelCls}>Track</label>
-              <select className={selectCls} value={track} onChange={(e) => setTrack(e.target.value as typeof track)}>
+              <select className={selectCls} value={track} onChange={(e) => handleTrackChange(e.target.value as typeof track)}>
                 {TRACKS.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t} value={t}>{t.replace('_', ' ')}</option>
                 ))}
               </select>
             </div>
             <div>
               <label className={labelCls}>Skill</label>
-              <select className={selectCls} value={skill} onChange={(e) => setSkill(e.target.value as typeof skill)}>
-                {SKILLS.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+              <select className={selectCls} value={skill} onChange={(e) => handleSkillChange(e.target.value)}>
+                {trackSkills.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
               </select>
             </div>
@@ -281,6 +314,17 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
               </select>
             </div>
           </div>
+
+          {showDesmos && (
+            <div className="rounded-xl border border-navy-200 bg-navy-50 p-3">
+              <p className="mb-2 text-xs font-semibold text-navy-600">Desmos Graphing Calculator — students see this during the Math test</p>
+              <iframe
+                src="https://www.desmos.com/calculator"
+                className="h-64 w-full rounded-lg border border-navy-200"
+                title="Desmos Graphing Calculator"
+              />
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Input
@@ -375,8 +419,12 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
                   value={group.type}
                   onChange={(e) => changeGroupType(gi, e.target.value as BuilderQuestionType)}
                 >
-                  {BUILDER_QUESTION_TYPES.map((t) => (
-                    <option key={t} value={t}>{BUILDER_TYPE_META[t].label}</option>
+                  {allowedTypes.map((t) => (
+                    <option key={t} value={t}>
+                      {track === 'SAT' && skill === 'MATH' && t === 'SHORT_ANSWER'
+                        ? 'Grid-in (student types answer)'
+                        : BUILDER_TYPE_META[t].label}
+                    </option>
                   ))}
                 </select>
                 <p className="mt-1 text-xs text-navy-400">{BUILDER_TYPE_META[group.type].hint}</p>
@@ -386,9 +434,26 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
                 required
                 value={group.instruction}
                 onChange={(e) => updateGroup(gi, { instruction: e.target.value })}
-                placeholder="Questions 1–5: Choose the correct letter A, B, C or D."
+                placeholder={
+                  skill === 'WRITING' ? 'Task 1: Write at least 150 words.' :
+                  skill === 'SPEAKING' ? 'Part 2: Speak for 1–2 minutes.' :
+                  'Questions 1–5: Choose the correct letter A, B, C or D.'
+                }
               />
             </div>
+
+            {showExplanation && (
+              <div>
+                <label className={labelCls}>Theory / Explanation (shown before questions)</label>
+                <textarea
+                  className={textareaCls}
+                  rows={4}
+                  value={group.explanation}
+                  onChange={(e) => updateGroup(gi, { explanation: e.target.value })}
+                  placeholder="E.g. Present Simple is used for habits, facts and routines. We use DO/DOES for questions..."
+                />
+              </div>
+            )}
 
             {/* questions */}
             <div className="space-y-3">
@@ -417,6 +482,20 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
                     onChange={(e) => updateQuestion(gi, qi, { prompt: e.target.value })}
                     placeholder="Question text…"
                   />
+
+                  <input
+                    className={cn(textareaCls, 'mt-2 text-sm')}
+                    value={q.imageUrl}
+                    onChange={(e) => updateQuestion(gi, qi, { imageUrl: e.target.value })}
+                    placeholder="Image URL (optional) — Google Drive / Imgur share link"
+                  />
+                  {q.imageUrl && (
+                    <img
+                      src={q.imageUrl}
+                      alt="preview"
+                      className="mt-2 max-h-48 w-full rounded-lg object-contain border border-navy-100"
+                    />
+                  )}
 
                   <QuestionEditor
                     group={group}

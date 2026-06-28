@@ -38,6 +38,15 @@ export const BUILDER_QUESTION_TYPES = [
   'SPEAKING_PROMPT', // speaking — recorded, graded later
 ] as const
 
+/** Which question types are allowed per skill. */
+export const SKILL_ALLOWED_TYPES: Record<string, readonly (typeof BUILDER_QUESTION_TYPES)[number][]> = {
+  LISTENING: ['MULTIPLE_CHOICE', 'MULTI_SELECT', 'TRUE_FALSE_NOTGIVEN', 'SHORT_ANSWER'],
+  READING:   ['MULTIPLE_CHOICE', 'MULTI_SELECT', 'TRUE_FALSE_NOTGIVEN', 'SHORT_ANSWER'],
+  SPEAKING:  ['SPEAKING_PROMPT'],
+  WRITING:   ['ESSAY'],
+  MATH:      ['MULTIPLE_CHOICE', 'SHORT_ANSWER'], // SHORT_ANSWER = grid-in
+}
+
 export const builderQuestionTypeSchema = z.enum(BUILDER_QUESTION_TYPES)
 export type BuilderQuestionType = z.infer<typeof builderQuestionTypeSchema>
 
@@ -84,6 +93,26 @@ export const BUILDER_TYPE_META: Record<
   },
 }
 
+/** Skills available per track (for the builder UI). */
+export const TRACK_SKILLS: Record<string, { value: string; label: string }[]> = {
+  IELTS:           [
+    { value: 'LISTENING', label: 'Listening' },
+    { value: 'READING',   label: 'Reading' },
+    { value: 'SPEAKING',  label: 'Speaking' },
+    { value: 'WRITING',   label: 'Writing' },
+  ],
+  SAT:             [
+    { value: 'READING', label: 'English / EBRW' },
+    { value: 'MATH',    label: 'Math' },
+  ],
+  GENERAL_ENGLISH: [
+    { value: 'LISTENING', label: 'Listening' },
+    { value: 'READING',   label: 'Reading' },
+    { value: 'SPEAKING',  label: 'Speaking' },
+    { value: 'WRITING',   label: 'Writing' },
+  ],
+}
+
 /** True/False/Not Given accepted values (also the stored answer tokens). */
 export const TFNG_VALUES = ['TRUE', 'FALSE', 'NOT_GIVEN'] as const
 
@@ -100,6 +129,8 @@ const builderQuestionSchema = z.object({
   /** SHORT_ANSWER accepted answer, or a TFNG value */
   answerText: z.string().trim().default(''),
   explanation: z.string().trim().optional(),
+  /** optional image URL shown above the question (e.g. Google Drive share link) */
+  imageUrl: z.string().trim().optional(),
   points: z.number().int().min(1).max(20).default(1),
 })
 export type BuilderQuestion = z.infer<typeof builderQuestionSchema>
@@ -107,6 +138,8 @@ export type BuilderQuestion = z.infer<typeof builderQuestionSchema>
 const builderGroupSchema = z.object({
   type: builderQuestionTypeSchema,
   instruction: z.string().trim().min(1, 'Group instruction is required'),
+  /** Theory/explanation shown to the student before the questions (General English). */
+  explanation: z.string().trim().optional(),
   questions: z.array(builderQuestionSchema).min(1, 'Add at least one question'),
 })
 export type BuilderGroup = z.infer<typeof builderGroupSchema>
@@ -172,6 +205,7 @@ function questionToNormalized(
     explanation: q.explanation || undefined,
     points: q.points,
   }
+  const img = q.imageUrl ? { imageUrl: q.imageUrl } : {}
 
   switch (type) {
     case 'MULTIPLE_CHOICE':
@@ -190,7 +224,7 @@ function questionToNormalized(
       }
       return {
         ...base,
-        data: { options },
+        data: { options, ...img },
         answer: type === 'MULTIPLE_CHOICE' ? correctKeys[0]! : correctKeys,
       }
     }
@@ -200,18 +234,18 @@ function questionToNormalized(
       if (!TFNG_VALUES.includes(value as (typeof TFNG_VALUES)[number])) {
         throw new Error(`"${q.prompt}": choose TRUE, FALSE or NOT_GIVEN.`)
       }
-      return { ...base, answer: value }
+      return { ...base, data: Object.keys(img).length ? img : undefined, answer: value }
     }
 
     case 'SHORT_ANSWER': {
       if (!q.answerText) throw new Error(`"${q.prompt}": enter the accepted answer.`)
-      return { ...base, answer: q.answerText }
+      return { ...base, data: Object.keys(img).length ? img : undefined, answer: q.answerText }
     }
 
     case 'ESSAY':
     case 'SPEAKING_PROMPT':
       // Subjective — no answer key. Default a higher weight so it counts.
-      return { ...base, points: q.points > 1 ? q.points : 9, answer: [] }
+      return { ...base, data: Object.keys(img).length ? img : undefined, points: q.points > 1 ? q.points : 9, answer: [] }
   }
 }
 
@@ -221,6 +255,7 @@ export function builderToNormalized(input: BuilderTask): NormalizedTask {
     order: gi,
     type: g.type,
     instruction: g.instruction,
+    data: g.explanation ? { explanation: g.explanation } : undefined,
     questions: g.questions.map((q, qi) => questionToNormalized(q, g.type, qi)),
   }))
 

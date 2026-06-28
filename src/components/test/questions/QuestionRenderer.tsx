@@ -550,6 +550,15 @@ export function QuestionRenderer({
           {question.prompt}
         </p>
       </div>
+      {typeof (question.data as Record<string, unknown> | undefined)?.imageUrl === 'string' && (
+        <div className="pl-10">
+          <img
+            src={(question.data as Record<string, unknown>).imageUrl as string}
+            alt=""
+            className="max-h-72 w-full rounded-xl border border-navy-100 object-contain"
+          />
+        </div>
+      )}
       <div className="pl-10">
         {wordLimit && (type.endsWith('COMPLETION') || type === 'SHORT_ANSWER' || type === 'LABELLING') && (
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-accent-600">{wordLimit}</p>
