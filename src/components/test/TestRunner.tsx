@@ -41,7 +41,7 @@ export interface RunnerTask {
   slug: string
   title: string
   track: 'IELTS' | 'SAT' | 'GENERAL_ENGLISH' | 'CEFR' | 'MULTILEVEL'
-  skill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING'
+  skill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' | 'MATH'
   type: 'PRACTICE' | 'MOCK' | 'FULL' | 'PLACEMENT'
   cefrLevel: string | null
   durationMin: number
@@ -89,6 +89,7 @@ const SKILL_ICON: Record<RunnerTask['skill'], typeof BookOpen> = {
   READING: BookOpen,
   SPEAKING: ListChecks,
   WRITING: ListChecks,
+  MATH: ListChecks,
 }
 
 function answerToText(answer: string | string[] | null): string {
@@ -222,6 +223,7 @@ export function TestRunner({ task }: { task: RunnerTask }) {
   const lowTime = !submitted && remaining <= 60
   const hasPassage = Boolean(task.passageHtml)
   const hasAudio = Boolean(task.audioUrl)
+  const hasDesmos = task.track === 'SAT' && task.skill === 'MATH'
   const progressPct = totalQuestions > 0 ? Math.round((answeredCount / totalQuestions) * 100) : 0
 
   return (
@@ -283,6 +285,19 @@ export function TestRunner({ task }: { task: RunnerTask }) {
               {task.instructions && (
                 <p className="max-w-xl text-sm text-navy-500">{task.instructions}</p>
               )}
+            </CardBody>
+          </Card>
+        )}
+
+        {hasDesmos && (
+          <Card className="mb-6">
+            <CardBody>
+              <p className="mb-2 text-xs font-semibold text-navy-600">Desmos Graphing Calculator</p>
+              <iframe
+                src="https://www.desmos.com/calculator"
+                className="h-72 w-full rounded-lg border border-navy-200"
+                title="Desmos Graphing Calculator"
+              />
             </CardBody>
           </Card>
         )}
@@ -359,6 +374,14 @@ export function TestRunner({ task }: { task: RunnerTask }) {
                     <p className="mt-1.5 text-sm font-medium text-navy-700">{group.instruction}</p>
                     <GroupContext data={group.data} type={group.type} />
                   </div>
+
+                  {/* Theory/explanation block for General English */}
+                  {group.data && typeof (group.data as Record<string, unknown>).explanation === 'string' && (
+                    <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-relaxed text-navy-700">
+                      <p className="mb-1 text-xs font-bold uppercase tracking-wide text-blue-600">Theory</p>
+                      <p className="whitespace-pre-line">{(group.data as Record<string, unknown>).explanation as string}</p>
+                    </div>
+                  )}
 
                   <div className="space-y-6">
                     {group.questions.map((q) => {

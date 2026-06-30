@@ -39,7 +39,7 @@ export function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-navy-100 bg-sky-50/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-white/30 bg-white/60 shadow-sm backdrop-blur-xl">
       <nav className="container-app flex h-16 items-center justify-between" aria-label="Main">
         <Link href="/" className="flex items-center rounded-lg" aria-label="SVY home">
           <Logo size={48} />

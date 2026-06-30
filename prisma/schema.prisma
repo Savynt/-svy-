@@ -33,6 +33,7 @@ enum Skill {
   READING
   SPEAKING
   WRITING
+  MATH
 }
 
 enum TaskType {

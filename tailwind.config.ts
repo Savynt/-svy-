@@ -48,9 +48,25 @@ const config: Config = {
           '0%': { opacity: '0', transform: 'translateY(12px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        blob: {
+          '0%,100%': { transform: 'translate(0,0) scale(1)' },
+          '33%': { transform: 'translate(40px,-60px) scale(1.12)' },
+          '66%': { transform: 'translate(-30px,30px) scale(0.92)' },
+        },
+        float: {
+          '0%,100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
+        'gradient-x': {
+          '0%,100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
       },
       animation: {
         'fade-up': 'fade-up 0.5s ease-out both',
+        blob: 'blob 8s ease-in-out infinite',
+        'blob-slow': 'blob 13s ease-in-out infinite',
+        float: 'float 4s ease-in-out infinite',
       },
     },
   },
