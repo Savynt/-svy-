@@ -42,7 +42,7 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-navy-100 bg-sky-50/85 backdrop-blur-md">
       <nav className="container-app flex h-16 items-center justify-between" aria-label="Main">
         <Link href="/" className="flex items-center rounded-lg" aria-label="SVY home">
-          <Logo />
+          <Logo size={48} />
         </Link>
 
         {/* desktop */}
