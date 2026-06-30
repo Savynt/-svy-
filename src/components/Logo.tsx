@@ -10,13 +10,14 @@ interface LogoProps {
 }
 
 /**
- * SVY mark — an open book with the SVY monogram, recreated as inline SVG
- * from the brand logo so it scales crisply and inherits theme colours.
+ * SVY mark — open book with SVY monogram, inline SVG matching brand identity.
+ * Sky-blue background, dark-navy book frame, white sticker border.
  * Server component (no interactivity), usable anywhere.
  */
 export function Logo({ size = 36, withWordmark = true, className, variant = 'navy' }: LogoProps) {
-  const stroke = variant === 'light' ? '#ffffff' : '#1e3a5f'
-  const plate = variant === 'light' ? 'rgba(255,255,255,0.12)' : '#cfe2ee'
+  const ink = variant === 'light' ? '#ffffff' : '#1e3a5f'
+  const bg = variant === 'light' ? 'rgba(255,255,255,0.18)' : '#4dc3ee'
+  const border = variant === 'light' ? 'rgba(255,255,255,0.35)' : '#ffffff'
 
   return (
     <span className={cn('inline-flex items-center gap-2.5', className)}>
@@ -29,36 +30,52 @@ export function Logo({ size = 36, withWordmark = true, className, variant = 'nav
         aria-label="SVY"
         className="shrink-0"
       >
-        <rect width="64" height="64" rx="14" fill={plate} />
+        {/* White sticker border */}
+        <rect width="64" height="64" rx="14" fill={border} />
+        {/* Sky-blue plate */}
+        <rect x="3" y="3" width="58" height="58" rx="11" fill={bg} />
+        {/* Open book — top page arcs */}
         <path
-          d="M13 19c6-3.4 12.5-3.2 19 1 6.5-4.2 13-4.4 19-1v27c-6-3.4-12.5-3.2-19 1-6.5-4.2-13-4.4-19-1V19Z"
-          stroke={stroke}
-          strokeWidth="2.6"
+          d="M9 27 C12 14 24 12 32 19 C40 12 52 14 55 27"
+          stroke={ink}
+          strokeWidth="2.8"
+          strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <path d="M32 21v26" stroke={stroke} strokeWidth="2.6" />
+        {/* Open book — bottom spine arc */}
         <path
-          d="M19 33c3.5 1.4 7.5 1.6 11 .4M34 33.4c3.5-1.2 7.5-1 11 .4"
-          stroke={stroke}
-          strokeWidth="1.6"
+          d="M9 49 C16 57 26 56 32 51 C38 56 48 57 55 49"
+          stroke={ink}
+          strokeWidth="2.5"
           strokeLinecap="round"
-          opacity="0.6"
+          strokeLinejoin="round"
         />
+        {/* Center spine */}
+        <line x1="32" y1="19" x2="32" y2="51" stroke={ink} strokeWidth="2.2" strokeLinecap="round" />
+        {/* Page rule lines */}
+        <path
+          d="M13 37 C19 39 25 39 31 37M33 37 C39 39 45 39 51 37"
+          stroke={ink}
+          strokeWidth="1.4"
+          strokeLinecap="round"
+          opacity="0.5"
+        />
+        {/* SVY monogram — large and bold */}
         <text
           x="32"
-          y="40"
+          y="44"
           textAnchor="middle"
-          fontFamily="'Plus Jakarta Sans', sans-serif"
-          fontWeight="800"
-          fontSize="13"
-          letterSpacing="0.5"
-          fill={stroke}
+          fontFamily="'Plus Jakarta Sans', 'Segoe UI', sans-serif"
+          fontWeight="900"
+          fontSize="17"
+          letterSpacing="1"
+          fill={ink}
         >
           SVY
         </text>
       </svg>
       {withWordmark && (
-        <span className="font-display text-xl font-extrabold tracking-tight" style={{ color: stroke }}>
+        <span className="font-display text-xl font-extrabold tracking-tight" style={{ color: ink }}>
           SVY
         </span>
       )}
