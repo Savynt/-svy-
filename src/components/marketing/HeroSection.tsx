@@ -1,17 +1,13 @@
 'use client'
 
 import { motion, type Variants } from 'framer-motion'
-import { ArrowRight, BookOpen, CheckCircle2, Headphones, Mic, Sparkles } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { CardBody } from '@/components/ui/Card'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Logo } from '@/components/Logo'
 import { formatUzs } from '@/lib/format'
-import type { ComponentType } from 'react'
-
-type IconType = ComponentType<{ className?: string }>
-
 const ease: [number, number, number, number] = [0.22, 1, 0.36, 1]
 
 const heroLeft: Variants = {
@@ -34,8 +30,6 @@ const cardVariant: Variants = {
   hidden: { opacity: 0, x: 60 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.8, delay: 0.3, ease } },
 }
-
-const chipDelays = [0.55, 0.7, 0.85]
 
 export function HeroSection({ price }: { price: number }) {
   return (
@@ -113,22 +107,6 @@ export function HeroSection({ price }: { price: number }) {
 
           {/* ── Right: glass card ── */}
           <div className="relative">
-            {/* Floating skill chips */}
-            {([
-              { icon: Headphones, label: 'Listening', pos: 'absolute -left-4 top-4 z-20 hidden sm:block', i: 0 },
-              { icon: BookOpen,   label: 'Reading',   pos: 'absolute -right-3 top-20 z-20 hidden sm:block', i: 1 },
-              { icon: Mic,        label: 'Speaking',  pos: 'absolute -bottom-4 left-8 z-20 hidden sm:block', i: 2 },
-            ] as const).map(({ icon, label, pos, i }) => (
-              <motion.div
-                key={label}
-                className={pos}
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: chipDelays[i], duration: 0.4, type: 'spring', stiffness: 260, damping: 18 }}
-              >
-                <GlassChip icon={icon} label={label} />
-              </motion.div>
-            ))}
 
             {/* Glow behind card */}
             <div className="absolute inset-0 -z-0 translate-y-8 scale-90 rounded-3xl bg-[#4dc3ee]/20 blur-3xl" />
@@ -184,15 +162,6 @@ export function HeroSection({ price }: { price: number }) {
         </div>
       </div>
     </section>
-  )
-}
-
-function GlassChip({ icon: Icon, label }: { icon: IconType; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-sm font-semibold text-white shadow-lg backdrop-blur-md">
-      <Icon className="h-4 w-4 text-[#4dc3ee]" />
-      {label}
-    </span>
   )
 }
 
