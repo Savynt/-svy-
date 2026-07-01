@@ -150,7 +150,7 @@ export const builderTaskSchema = z.object({
   skill: skillSchema,
   type: taskTypeSchema.default('PRACTICE'),
   cefrLevel: cefrLevelSchema.optional(),
-  durationMin: z.number().int().min(1).max(240).default(20),
+  durationMin: z.number().int().min(1).max(480).default(20),
   topics: z.array(z.string().trim().min(1)).default([]),
   instructions: z.string().trim().optional(),
   /** reading passage / writing context (HTML or plain text) */
