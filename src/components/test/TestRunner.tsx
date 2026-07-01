@@ -131,6 +131,10 @@ export function TestRunner({ task }: { task: RunnerTask }) {
   const [showTranscript, setShowTranscript] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
+  // Instant per-question feedback for PRACTICE tasks.
+  const [instantResults, setInstantResults] = useState<Record<string, QuestionResult>>({})
+  const [lockedQuestions, setLockedQuestions] = useState<Set<string>>(new Set())
+
   const durationSec = task.durationMin * 60
   const [remaining, setRemaining] = useState(durationSec)
   // Wall-clock anchors, set on mount in an effect (no impure call during render).
@@ -147,9 +151,46 @@ export function TestRunner({ task }: { task: RunnerTask }) {
     }, 0)
   }, [answers, flatQuestions])
 
-  const setAnswer = useCallback((questionId: string, value: AnswerValue) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: value }))
+  // Choice types that trigger instant feedback on selection.
+  const INSTANT_CHECK_TYPES = new Set<QuestionType>([
+    'MULTIPLE_CHOICE', 'TRUE_FALSE_NOTGIVEN', 'YES_NO_NOTGIVEN',
+    'MULTI_SELECT', 'MATCHING', 'MATCHING_HEADINGS',
+  ])
+
+  const checkPracticeAnswer = useCallback(async (questionId: string, response: AnswerValue, points: number) => {
+    try {
+      const res = await fetch('/api/attempts/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questionId, response }),
+      })
+      if (!res.ok) return
+      const data = await res.json() as { isCorrect: boolean | null; correctAnswer: string | string[] | null; explanation: string | null }
+      setInstantResults((prev) => ({
+        ...prev,
+        [questionId]: {
+          questionId,
+          isCorrect: data.isCorrect,
+          pointsAwarded: data.isCorrect ? points : 0,
+          points,
+          correctAnswer: data.correctAnswer,
+          explanation: data.explanation,
+          needsGrading: false,
+        },
+      }))
+      setLockedQuestions((prev) => new Set([...prev, questionId]))
+    } catch {
+      // silent — instant check is best-effort
+    }
   }, [])
+
+  const setAnswer = useCallback((questionId: string, value: AnswerValue, questionType?: QuestionType, points?: number) => {
+    setAnswers((prev) => ({ ...prev, [questionId]: value }))
+    if (task.type === 'PRACTICE' && questionType && INSTANT_CHECK_TYPES.has(questionType) && !lockedQuestions.has(questionId)) {
+      void checkPracticeAnswer(questionId, value, points ?? 1)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task.type, lockedQuestions, checkPracticeAnswer])
 
   const handleSubmit = useCallback(async () => {
     if (submitted || submitting) return
@@ -385,15 +426,16 @@ export function TestRunner({ task }: { task: RunnerTask }) {
 
                   <div className="space-y-6">
                     {group.questions.map((q) => {
-                      const r = submitted ? resultById.get(q.id) : undefined
+                      const r = submitted ? resultById.get(q.id) : instantResults[q.id]
+                      const qLocked = submitted || lockedQuestions.has(q.id)
                       return (
                         <div key={q.id}>
                           <QuestionRenderer
                             question={q}
                             value={answers[q.id]}
-                            onChange={(v) => setAnswer(q.id, v)}
+                            onChange={(v) => setAnswer(q.id, v, q.type, q.points)}
                             displayNumber={numberById.get(q.id) ?? q.order}
-                            locked={submitted}
+                            locked={qLocked}
                             isCorrect={r ? r.isCorrect : undefined}
                           />
                           {r && <ResultFeedback result={r} userAnswer={answers[q.id]} />}
