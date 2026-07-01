@@ -227,7 +227,7 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
         publish: canPublish && publish,
         groups: groups.map((g) => ({
           type: g.type,
-          instruction: g.instruction,
+          instruction: showExplanation ? (g.instruction || 'Answer the questions below.') : g.instruction,
           explanation: g.explanation || undefined,
           questions: g.questions.map((q) => ({
             prompt: q.prompt,
@@ -411,7 +411,7 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
               )}
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className={cn('grid gap-4', showExplanation ? 'sm:grid-cols-1' : 'sm:grid-cols-2')}>
               <div>
                 <label className={labelCls}>Question type</label>
                 <select
@@ -429,17 +429,19 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
                 </select>
                 <p className="mt-1 text-xs text-navy-400">{BUILDER_TYPE_META[group.type].hint}</p>
               </div>
-              <Input
-                label="Instruction"
-                required
-                value={group.instruction}
-                onChange={(e) => updateGroup(gi, { instruction: e.target.value })}
-                placeholder={
-                  skill === 'WRITING' ? 'Task 1: Write at least 150 words.' :
-                  skill === 'SPEAKING' ? 'Part 2: Speak for 1–2 minutes.' :
-                  'Questions 1–5: Choose the correct letter A, B, C or D.'
-                }
-              />
+              {!showExplanation && (
+                <Input
+                  label="Instruction"
+                  required
+                  value={group.instruction}
+                  onChange={(e) => updateGroup(gi, { instruction: e.target.value })}
+                  placeholder={
+                    skill === 'WRITING' ? 'Task 1: Write at least 150 words.' :
+                    skill === 'SPEAKING' ? 'Part 2: Speak for 1–2 minutes.' :
+                    'Questions 1–5: Choose the correct letter A, B, C or D.'
+                  }
+                />
+              )}
             </div>
 
             {showExplanation && (
