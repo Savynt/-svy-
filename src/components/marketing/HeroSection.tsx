@@ -129,17 +129,18 @@ export function HeroSection({ price }: { price: number }) {
                 <div className="rounded-xl border border-white/15 bg-white/5 p-4">
                   <div className="mb-2 flex items-center justify-between">
                     <p className="text-xs font-bold uppercase tracking-wider text-sky-300">
-                      Sample · IELTS Reading
+                      Sample · General English
                     </p>
-                    <Badge tone="sky">Q14 / 40</Badge>
+                    <Badge tone="sky">Q1 / 20</Badge>
                   </div>
                   <p className="font-medium text-white">
-                    The passage mainly discusses the effects of climate on coastal cities.
+                    One of the most interesting sports _____ football.
                   </p>
                   <div className="mt-3 space-y-2">
-                    <GlassOption label="True" active />
-                    <GlassOption label="False" />
-                    <GlassOption label="Not given" />
+                    <GlassOption label="A) is" active correct />
+                    <GlassOption label="B) are" />
+                    <GlassOption label="C) were" />
+                    <GlassOption label="D) have" />
                   </div>
                 </div>
 
@@ -165,19 +166,25 @@ export function HeroSection({ price }: { price: number }) {
   )
 }
 
-function GlassOption({ label, active = false }: { label: string; active?: boolean }) {
+function GlassOption({ label, active = false, correct = false }: { label: string; active?: boolean; correct?: boolean }) {
+  const isCorrectActive = active && correct
   return (
     <div
       className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-        active ? 'border-[#4dc3ee]/50 bg-[#4dc3ee]/15 text-white' : 'border-white/10 bg-white/5 text-navy-200'
+        isCorrectActive
+          ? 'border-emerald-400/60 bg-emerald-500/20 text-white'
+          : active
+          ? 'border-[#4dc3ee]/50 bg-[#4dc3ee]/15 text-white'
+          : 'border-white/10 bg-white/5 text-navy-200'
       }`}
     >
       <span
         className={`inline-flex h-4 w-4 items-center justify-center rounded-full border-2 ${
-          active ? 'border-[#4dc3ee]' : 'border-white/25'
+          isCorrectActive ? 'border-emerald-400 bg-emerald-400' : active ? 'border-[#4dc3ee]' : 'border-white/25'
         }`}
       >
-        {active && <span className="h-2 w-2 rounded-full bg-[#4dc3ee]" />}
+        {isCorrectActive && <span className="text-[10px] font-bold text-navy-900">✓</span>}
+        {active && !correct && <span className="h-2 w-2 rounded-full bg-[#4dc3ee]" />}
       </span>
       {label}
     </div>
