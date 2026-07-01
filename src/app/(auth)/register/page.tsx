@@ -188,7 +188,8 @@ export default function RegisterPage() {
 
         <div className="rounded-xl bg-sky-50 px-3.5 py-3 text-xs leading-relaxed text-navy-600">
           We&apos;ll email a <span className="font-semibold text-navy-700">6-digit code</span> to
-          confirm your address. Your phone is saved for your account but isn&apos;t verified by SMS.
+          confirm your address. Your phone is saved for your account but isn&apos;t verified by SMS.{' '}
+          If you don&apos;t see it, check your <span className="font-semibold text-navy-700">spam or junk</span> folder.
         </div>
 
         <Button type="submit" variant="primary" size="lg" className="w-full" disabled={loading}>

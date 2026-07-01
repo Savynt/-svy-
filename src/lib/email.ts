@@ -5,7 +5,7 @@
  *   3. Console stub — dev / no config
  */
 
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'SVY'
+const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'Savynt'
 const FROM_EMAIL = process.env.BREVO_FROM ?? process.env.SMTP_FROM ?? 'savynt.english@gmail.com'
 
 interface EmailMessage {

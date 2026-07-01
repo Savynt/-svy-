@@ -166,6 +166,10 @@ function VerifyForm() {
           )}
           . Enter it below.
         </p>
+        <p className="mt-1.5 text-xs text-navy-400">
+          Can&apos;t find it? Check your{' '}
+          <span className="font-medium text-navy-500">spam or junk</span> folder.
+        </p>
       </header>
 
       <form onSubmit={onSubmit} noValidate className="space-y-5">

@@ -83,6 +83,10 @@ export default function ForgotPasswordPage() {
           <span className="font-semibold text-navy-700 break-all">{target}</span>, we&apos;ve sent a
           password reset code. Enter it on the next step.
         </p>
+        <p className="mt-1.5 text-xs text-navy-400">
+          Can&apos;t find it? Check your{' '}
+          <span className="font-medium text-navy-500">spam or junk</span> folder.
+        </p>
         <div className="mt-6 space-y-3">
           <Button href="/reset-password" variant="primary" size="lg" className="w-full">
             Enter reset code
