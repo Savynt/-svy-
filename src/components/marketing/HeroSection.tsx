@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { motion, type Variants } from 'framer-motion'
 import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -126,23 +127,7 @@ export function HeroSection({ price }: { price: number }) {
                   </Badge>
                 </div>
 
-                <div className="rounded-xl border border-white/15 bg-white/5 p-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <p className="text-xs font-bold uppercase tracking-wider text-sky-300">
-                      Sample · General English
-                    </p>
-                    <Badge tone="sky">Q1 / 20</Badge>
-                  </div>
-                  <p className="font-medium text-white">
-                    One of the most interesting sports _____ football.
-                  </p>
-                  <div className="mt-3 space-y-2">
-                    <GlassOption label="A) is" active correct />
-                    <GlassOption label="B) are" />
-                    <GlassOption label="C) were" />
-                    <GlassOption label="D) have" />
-                  </div>
-                </div>
+                <InteractiveSampleQuestion />
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
@@ -163,6 +148,90 @@ export function HeroSection({ price }: { price: number }) {
         </div>
       </div>
     </section>
+  )
+}
+
+const SAMPLE_OPTIONS = ['A) is', 'B) are', 'C) were', 'D) have'] as const
+const CORRECT_OPTION = 'A) is'
+
+function InteractiveSampleQuestion() {
+  const [selected, setSelected] = useState<string | null>(null)
+
+  function pick(option: string) {
+    if (selected !== null) return // locked after first pick
+    setSelected(option)
+  }
+
+  return (
+    <div className="rounded-xl border border-white/15 bg-white/5 p-4">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-xs font-bold uppercase tracking-wider text-sky-300">
+          Sample · General English
+        </p>
+        <Badge tone="sky">Q1 / 20</Badge>
+      </div>
+      <p className="font-medium text-white">
+        One of the most interesting sports _____ football.
+      </p>
+      <div className="mt-3 space-y-2">
+        {SAMPLE_OPTIONS.map((opt) => {
+          const isSelected = selected === opt
+          const isCorrect = opt === CORRECT_OPTION
+          const answered = selected !== null
+
+          let state: 'idle' | 'correct' | 'wrong' | 'reveal' = 'idle'
+          if (answered) {
+            if (isSelected && isCorrect) state = 'correct'
+            else if (isSelected && !isCorrect) state = 'wrong'
+            else if (!isSelected && isCorrect) state = 'reveal'
+          }
+
+          return (
+            <button
+              key={opt}
+              onClick={() => pick(opt)}
+              disabled={answered}
+              className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm font-medium transition-all duration-200 ${
+                state === 'correct'
+                  ? 'border-emerald-400/60 bg-emerald-500/20 text-white'
+                  : state === 'wrong'
+                  ? 'border-red-400/60 bg-red-500/20 text-white'
+                  : state === 'reveal'
+                  ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300'
+                  : answered
+                  ? 'border-white/5 bg-white/3 text-navy-400'
+                  : 'border-white/10 bg-white/5 text-navy-200 hover:border-white/20 hover:bg-white/10 cursor-pointer'
+              }`}
+            >
+              <span
+                className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold ${
+                  state === 'correct'
+                    ? 'border-emerald-400 bg-emerald-400 text-navy-900'
+                    : state === 'wrong'
+                    ? 'border-red-400 bg-red-400 text-white'
+                    : state === 'reveal'
+                    ? 'border-emerald-400 text-emerald-400'
+                    : 'border-white/25'
+                }`}
+              >
+                {state === 'correct' && '✓'}
+                {state === 'wrong' && '✕'}
+                {state === 'reveal' && '✓'}
+              </span>
+              {opt}
+            </button>
+          )
+        })}
+      </div>
+      {selected !== null && selected !== CORRECT_OPTION && (
+        <p className="mt-2 text-xs text-emerald-400">
+          Correct answer: <span className="font-semibold">{CORRECT_OPTION}</span>
+        </p>
+      )}
+      {selected === CORRECT_OPTION && (
+        <p className="mt-2 text-xs text-emerald-400 font-medium">✓ Well done!</p>
+      )}
+    </div>
   )
 }
 
