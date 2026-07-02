@@ -34,6 +34,7 @@ enum Skill {
   SPEAKING
   WRITING
   MATH
+  GRAMMAR
 }
 
 enum TaskType {

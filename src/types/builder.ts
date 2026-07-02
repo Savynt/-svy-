@@ -45,6 +45,7 @@ export const SKILL_ALLOWED_TYPES: Record<string, readonly (typeof BUILDER_QUESTI
   SPEAKING:  ['SPEAKING_PROMPT'],
   WRITING:   ['ESSAY'],
   MATH:      ['MULTIPLE_CHOICE', 'SHORT_ANSWER'], // SHORT_ANSWER = grid-in
+  GRAMMAR:   ['MULTIPLE_CHOICE', 'MULTI_SELECT', 'SHORT_ANSWER'],
 }
 
 export const builderQuestionTypeSchema = z.enum(BUILDER_QUESTION_TYPES)
@@ -106,6 +107,7 @@ export const TRACK_SKILLS: Record<string, { value: string; label: string }[]> = 
     { value: 'MATH',    label: 'Math' },
   ],
   GENERAL_ENGLISH: [
+    { value: 'GRAMMAR',   label: 'Grammar' },
     { value: 'LISTENING', label: 'Listening' },
     { value: 'READING',   label: 'Reading' },
     { value: 'SPEAKING',  label: 'Speaking' },

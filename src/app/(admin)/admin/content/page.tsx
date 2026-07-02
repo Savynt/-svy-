@@ -76,6 +76,7 @@ const SKILL_META: Record<Skill, { label: string; icon: typeof Headphones }> = {
   SPEAKING: { label: 'Speaking', icon: Mic },
   WRITING: { label: 'Writing', icon: PenLine },
   MATH: { label: 'Math', icon: PenLine },
+  GRAMMAR: { label: 'Grammar', icon: BookOpen },
 }
 
 const STATUS_META: Record<

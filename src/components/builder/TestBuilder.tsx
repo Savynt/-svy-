@@ -75,6 +75,7 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
   const [track, setTrack] = useState<(typeof TRACKS)[number]>('IELTS')
   const [skill, setSkill] = useState<string>('READING')
   const [taskType, setTaskType] = useState<(typeof TASK_TYPES)[number]>('PRACTICE')
+  const [cefrLevel, setCefrLevel] = useState<string>('')
   const [durationMin, setDurationMin] = useState(20)
   const [topics, setTopics] = useState('')
   const [instructions, setInstructions] = useState('')
@@ -92,10 +93,12 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
   const trackSkills = TRACK_SKILLS[track] ?? TRACK_SKILLS['IELTS']
   const allowedTypes = SKILL_ALLOWED_TYPES[skill] ?? BUILDER_QUESTION_TYPES
 
-  const showPassage = skill === 'READING' || skill === 'WRITING'
+  const isGrammar = skill === 'GRAMMAR'
+  const showPassage = (skill === 'READING' || skill === 'WRITING') && !isGrammar
   const showAudio = skill === 'LISTENING'
   const showDesmos = track === 'SAT' && skill === 'MATH'
   const showExplanation = track === 'GENERAL_ENGLISH'
+  const showCefrLevel = track === 'GENERAL_ENGLISH'
 
   function handleTrackChange(newTrack: (typeof TRACKS)[number]) {
     const skills = TRACK_SKILLS[newTrack] ?? TRACK_SKILLS['IELTS']
@@ -215,12 +218,13 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
         skill,
         type: taskType,
 
+        cefrLevel: cefrLevel || undefined,
         durationMin,
         topics: topics
           .split(',')
           .map((t) => t.trim())
           .filter(Boolean),
-        instructions: instructions || undefined,
+        instructions: isGrammar ? undefined : (instructions || undefined),
         passageHtml: showPassage && passageHtml ? passageHtml : undefined,
         audioUrl: showAudio && audioUrl ? audioUrl : undefined,
         transcript: showAudio && transcript ? transcript : undefined,
@@ -279,22 +283,24 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
       {/* ---- meta ---- */}
       <Card>
         <CardBody className="space-y-4">
-          <h2 className="text-lg font-bold text-navy-800">Test details</h2>
+          <h2 className="text-lg font-bold text-navy-800">
+            {isGrammar ? 'Grammar lesson details' : 'Test details'}
+          </h2>
           <Input
             label="Title"
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. CDI IELTS Reading — Yawning"
+            placeholder={isGrammar ? 'e.g. Present Simple — habits and facts' : 'e.g. CDI IELTS Reading — Yawning'}
           />
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <label className={labelCls}>Track</label>
+              <label className={labelCls}>Module</label>
               <select className={selectCls} value={track} onChange={(e) => handleTrackChange(e.target.value as typeof track)}>
-                {TRACKS.map((t) => (
-                  <option key={t} value={t}>{t.replace('_', ' ')}</option>
-                ))}
+                <option value="IELTS">IELTS</option>
+                <option value="SAT">SAT</option>
+                <option value="GENERAL_ENGLISH">General English</option>
               </select>
             </div>
             <div>
@@ -305,14 +311,27 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
                 ))}
               </select>
             </div>
-            <div>
-              <label className={labelCls}>Format</label>
-              <select className={selectCls} value={taskType} onChange={(e) => setTaskType(e.target.value as typeof taskType)}>
-                {TASK_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
+            {!isGrammar && (
+              <div>
+                <label className={labelCls}>Format</label>
+                <select className={selectCls} value={taskType} onChange={(e) => setTaskType(e.target.value as typeof taskType)}>
+                  {TASK_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {showCefrLevel && (
+              <div>
+                <label className={labelCls}>Level</label>
+                <select className={selectCls} value={cefrLevel} onChange={(e) => setCefrLevel(e.target.value)}>
+                  <option value="">— any level —</option>
+                  {['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {showDesmos && (
@@ -327,31 +346,35 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              label="Duration (min)"
-              type="number"
-              min={1}
-              value={durationMin}
-              onChange={(e) => setDurationMin(Number(e.target.value) || 0)}
-            />
+            {!isGrammar && (
+              <Input
+                label="Duration (min)"
+                type="number"
+                min={1}
+                value={durationMin}
+                onChange={(e) => setDurationMin(Number(e.target.value) || 0)}
+              />
+            )}
             <Input
               label="Topics (comma-separated)"
               value={topics}
               onChange={(e) => setTopics(e.target.value)}
-              placeholder="science, environment"
+              placeholder={isGrammar ? 'present simple, habits' : 'science, environment'}
             />
           </div>
 
-          <div>
-            <label className={labelCls}>Instructions (optional)</label>
-            <textarea
-              className={textareaCls}
-              rows={2}
-              value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
-              placeholder="Shown to the student before they start."
-            />
-          </div>
+          {!isGrammar && (
+            <div>
+              <label className={labelCls}>Instructions (optional)</label>
+              <textarea
+                className={textareaCls}
+                rows={2}
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                placeholder="Shown to the student before they start."
+              />
+            </div>
+          )}
 
           {showPassage && (
             <div>
@@ -398,7 +421,9 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2 text-navy-700">
                 <GripVertical className="h-5 w-5 text-navy-300" />
-                <h3 className="text-base font-bold">Group {gi + 1}</h3>
+                <h3 className="text-base font-bold">
+                  {isGrammar ? `Exercise ${gi + 1}` : `Group ${gi + 1}`}
+                </h3>
               </div>
               {groups.length > 1 && (
                 <button
@@ -446,13 +471,17 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
 
             {showExplanation && (
               <div>
-                <label className={labelCls}>Theory / Explanation (shown before questions)</label>
+                <label className={labelCls}>
+                  {isGrammar ? 'Grammar explanation (shown to student before questions)' : 'Theory / Explanation'}
+                </label>
                 <textarea
                   className={textareaCls}
-                  rows={4}
+                  rows={isGrammar ? 5 : 4}
                   value={group.explanation}
                   onChange={(e) => updateGroup(gi, { explanation: e.target.value })}
-                  placeholder="E.g. Present Simple is used for habits, facts and routines. We use DO/DOES for questions..."
+                  placeholder={isGrammar
+                    ? 'Explain the grammar rule. E.g. Present Simple is used for habits and facts. Use DO/DOES in questions: "Do you work here?"'
+                    : 'E.g. Present Simple is used for habits, facts and routines...'}
                 />
               </div>
             )}
@@ -540,7 +569,7 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
       ))}
 
       <Button variant="ghost" onClick={addGroup} className="border border-dashed border-navy-200">
-        <Plus className="h-4 w-4" /> Add question group
+        <Plus className="h-4 w-4" /> {isGrammar ? 'Add exercise' : 'Add question group'}
       </Button>
 
       {/* ---- footer / submit ---- */}

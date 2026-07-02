@@ -41,7 +41,7 @@ export interface RunnerTask {
   slug: string
   title: string
   track: 'IELTS' | 'SAT' | 'GENERAL_ENGLISH' | 'CEFR' | 'MULTILEVEL'
-  skill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' | 'MATH'
+  skill: 'LISTENING' | 'READING' | 'SPEAKING' | 'WRITING' | 'MATH' | 'GRAMMAR'
   type: 'PRACTICE' | 'MOCK' | 'FULL' | 'PLACEMENT'
   cefrLevel: string | null
   durationMin: number
@@ -90,6 +90,7 @@ const SKILL_ICON: Record<RunnerTask['skill'], typeof BookOpen> = {
   SPEAKING: ListChecks,
   WRITING: ListChecks,
   MATH: ListChecks,
+  GRAMMAR: BookOpen,
 }
 
 function answerToText(answer: string | string[] | null): string {
