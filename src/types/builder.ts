@@ -142,6 +142,13 @@ const builderGroupSchema = z.object({
   instruction: z.string().trim().min(1, 'Group instruction is required'),
   /** Theory/explanation shown to the student before the questions (General English). */
   explanation: z.string().trim().optional(),
+  /** Grammar example sentences shown to the student before questions. */
+  examples: z.array(z.string().trim().min(1)).optional(),
+  /** Common error pairs: { wrong, correct }. Grammar only. */
+  errors: z.array(z.object({
+    wrong: z.string().trim().min(1),
+    correct: z.string().trim().min(1),
+  })).optional(),
   questions: z.array(builderQuestionSchema).min(1, 'Add at least one question'),
 })
 export type BuilderGroup = z.infer<typeof builderGroupSchema>
@@ -253,13 +260,19 @@ function questionToNormalized(
 
 /** Lower a whole builder task to the portable NormalizedTask contract. */
 export function builderToNormalized(input: BuilderTask): NormalizedTask {
-  const groups: NormalizedQuestionGroup[] = input.groups.map((g, gi) => ({
-    order: gi,
-    type: g.type,
-    instruction: g.instruction,
-    data: g.explanation ? { explanation: g.explanation } : undefined,
-    questions: g.questions.map((q, qi) => questionToNormalized(q, g.type, qi)),
-  }))
+  const groups: NormalizedQuestionGroup[] = input.groups.map((g, gi) => {
+    const data: Record<string, unknown> = {}
+    if (g.explanation) data.explanation = g.explanation
+    if (g.examples?.length) data.examples = g.examples
+    if (g.errors?.length) data.errors = g.errors
+    return {
+      order: gi,
+      type: g.type,
+      instruction: g.instruction,
+      data: Object.keys(data).length ? data : undefined,
+      questions: g.questions.map((q, qi) => questionToNormalized(q, g.type, qi)),
+    }
+  })
 
   const audioUrl = input.audioUrl && input.audioUrl.length > 0 ? input.audioUrl : undefined
 

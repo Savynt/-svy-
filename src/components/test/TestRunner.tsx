@@ -425,6 +425,37 @@ export function TestRunner({ task }: { task: RunnerTask }) {
                     </div>
                   )}
 
+                  {/* Grammar: example sentences */}
+                  {group.data && Array.isArray((group.data as Record<string, unknown>).examples) && ((group.data as Record<string, unknown>).examples as string[]).length > 0 && (
+                    <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-navy-700">
+                      <p className="mb-2 text-xs font-bold uppercase tracking-wide text-sky-600">Examples</p>
+                      <ul className="space-y-1">
+                        {((group.data as Record<string, unknown>).examples as string[]).map((ex, i) => (
+                          <li key={i} className="flex gap-2">
+                            <span className="shrink-0 font-semibold text-sky-500">{i + 1}.</span>
+                            <span className="italic">{ex}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Grammar: common errors */}
+                  {group.data && Array.isArray((group.data as Record<string, unknown>).errors) && ((group.data as Record<string, unknown>).errors as {wrong:string;correct:string}[]).length > 0 && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-navy-700">
+                      <p className="mb-2 text-xs font-bold uppercase tracking-wide text-amber-600">Common errors</p>
+                      <ul className="space-y-1.5">
+                        {((group.data as Record<string, unknown>).errors as {wrong:string;correct:string}[]).map((e, i) => (
+                          <li key={i} className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-md bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600 line-through">{e.wrong}</span>
+                            <span className="text-navy-400">→</span>
+                            <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">{e.correct}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   <div className="space-y-6">
                     {group.questions.map((q) => {
                       const r = submitted ? resultById.get(q.id) : instantResults[q.id]
