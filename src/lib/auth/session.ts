@@ -21,7 +21,7 @@ export async function setAuthCookies(accessToken: string, refreshToken: string) 
     secure: isProd,
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 15, // 15 min
+    maxAge: 60 * 120, // 2 hours
   })
   jar.set(REFRESH_COOKIE, refreshToken, {
     httpOnly: true,

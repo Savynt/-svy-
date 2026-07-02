@@ -321,11 +321,28 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
         })),
       }
 
-      const res = await fetch('/api/tasks/manual', {
+      const body = JSON.stringify(payload)
+      let res = await fetch('/api/tasks/manual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body,
       })
+
+      // Access token may have expired (15 min) — try refresh once and retry
+      if (res.status === 401) {
+        const refreshed = await fetch('/api/auth/refresh', { method: 'POST' })
+        if (refreshed.ok) {
+          res = await fetch('/api/tasks/manual', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body,
+          })
+        } else {
+          setError('Session expired — please sign in again.')
+          return
+        }
+      }
+
       const data: {
         error?: string
         issues?: { formErrors: string[]; fieldErrors: Record<string, string[]> }
