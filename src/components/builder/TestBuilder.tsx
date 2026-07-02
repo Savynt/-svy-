@@ -328,7 +328,7 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
         body,
       })
 
-      // Access token may have expired (15 min) — try refresh once and retry
+      // Access token may have expired — try refresh once and retry
       if (res.status === 401) {
         const refreshed = await fetch('/api/auth/refresh', { method: 'POST' })
         if (refreshed.ok) {
@@ -338,7 +338,8 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
             body,
           })
         } else {
-          setError('Session expired — please sign in again.')
+          // Refresh token also expired/revoked — send to login
+          router.push('/login?next=/coach/tasks/new')
           return
         }
       }
