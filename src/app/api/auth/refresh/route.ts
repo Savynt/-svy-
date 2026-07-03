@@ -2,9 +2,7 @@ import { cookies } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { verifyRefreshToken, signAccessToken, signRefreshToken } from '@/lib/auth/jwt'
 import { setAuthCookies, clearAuthCookies, REFRESH_COOKIE } from '@/lib/auth/session'
-
-/** Refresh-session lifetime — matches REFRESH_TOKEN_TTL (30d) used by the JWT. */
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000
+import { SESSION_TTL_MS } from '@/lib/auth/constants'
 
 /**
  * POST /api/auth/refresh

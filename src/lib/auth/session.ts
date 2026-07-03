@@ -53,11 +53,29 @@ export async function getSession(): Promise<SessionUser | null> {
   return { id: claims.sub, role: claims.role }
 }
 
-/** Full user record from DB (or null). */
+/** Full user record from DB (or null). Never includes passwordHash or googleId. */
 export async function getCurrentUser() {
   const session = await getSession()
   if (!session) return null
-  return prisma.user.findUnique({ where: { id: session.id } })
+  return prisma.user.findUnique({
+    where: { id: session.id },
+    select: {
+      id: true,
+      email: true,
+      phone: true,
+      firstName: true,
+      lastName: true,
+      name: true,
+      role: true,
+      cefrLevel: true,
+      locale: true,
+      emailVerified: true,
+      phoneVerified: true,
+      lastActiveAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  })
 }
 
 /** Use in server components / actions to require auth. Redirects to /login. */

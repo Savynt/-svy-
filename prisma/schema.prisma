@@ -288,6 +288,7 @@ model Task {
   attempts  Attempt[]
 
   @@index([track, skill, status])
+  @@index([authorId])
   @@index([status])
 }
 

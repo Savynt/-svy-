@@ -5,9 +5,7 @@ import { setAuthCookies } from '@/lib/auth/session'
 import { homeForRole } from '@/lib/rbac'
 import { loginSchema } from '@/lib/validators/auth'
 import { rateLimit, ipFromRequest } from '@/lib/rate-limit'
-
-/** Refresh-session lifetime — matches REFRESH_TOKEN_TTL (30d) used by the JWT. */
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000
+import { SESSION_TTL_MS } from '@/lib/auth/constants'
 
 /**
  * A real bcrypt hash compared against on the "no such user" path so login timing

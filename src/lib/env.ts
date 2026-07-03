@@ -9,9 +9,9 @@ const schema = z.object({
   DATABASE_URL: z.string().url().default('postgresql://svy:svy@localhost:5432/svy?schema=public'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
 
-  // Auth — 32+ char secrets. Overridden in .env / deployment.
-  JWT_ACCESS_SECRET: z.string().min(16).default('dev-access-secret-change-me-please-32'),
-  JWT_REFRESH_SECRET: z.string().min(16).default('dev-refresh-secret-change-me-please-32'),
+  // Auth — minimum 32 chars. Dev defaults are published in source — forbidden in production.
+  JWT_ACCESS_SECRET: z.string().min(32).default('dev-access-secret-do-not-use-in-production-xx'),
+  JWT_REFRESH_SECRET: z.string().min(32).default('dev-refresh-secret-do-not-use-in-production-xx'),
   ACCESS_TOKEN_TTL: z.string().default('15m'),
   REFRESH_TOKEN_TTL: z.string().default('30d'),
 
@@ -31,5 +31,16 @@ export const env = schema.parse({
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
 })
+
+// Fail fast at runtime if the well-known dev secrets reach production.
+// Skip during `next build` (NEXT_PHASE = phase-production-build) — secrets are not needed then.
+if (env.NODE_ENV === 'production' && process.env.NEXT_PHASE !== 'phase-production-build') {
+  if (env.JWT_ACCESS_SECRET.startsWith('dev-')) {
+    throw new Error('JWT_ACCESS_SECRET must be a strong random secret in production.')
+  }
+  if (env.JWT_REFRESH_SECRET.startsWith('dev-')) {
+    throw new Error('JWT_REFRESH_SECRET must be a strong random secret in production.')
+  }
+}
 
 export type Env = typeof env

@@ -1041,12 +1041,24 @@ function ExamplesEditor({
   onChange: (v: string[]) => void
   labelCls: string
 }) {
+  const [ids, setIds] = useState<string[]>(() => examples.map(() => Math.random().toString(36).slice(2)))
+
+  const handleAdd = () => {
+    setIds(prev => [...prev, Math.random().toString(36).slice(2)])
+    onChange([...examples, ''])
+  }
+
+  const handleDelete = (i: number) => {
+    setIds(prev => prev.filter((_, j) => j !== i))
+    onChange(examples.filter((_, j) => j !== i))
+  }
+
   return (
     <div>
       <label className={labelCls}>Example sentences (optional)</label>
       <div className="space-y-2">
         {examples.map((ex, i) => (
-          <div key={i} className="flex items-center gap-2">
+          <div key={ids[i] ?? i} className="flex items-center gap-2">
             <span className="shrink-0 text-xs font-bold text-navy-400">{i + 1}.</span>
             <input
               className={inlineCls}
@@ -1060,7 +1072,8 @@ function ExamplesEditor({
             />
             <button
               type="button"
-              onClick={() => onChange(examples.filter((_, j) => j !== i))}
+              aria-label="Remove example"
+              onClick={() => handleDelete(i)}
               className="shrink-0 text-navy-300 hover:text-red-500"
             >
               <Trash2 className="h-4 w-4" />
@@ -1069,7 +1082,7 @@ function ExamplesEditor({
         ))}
         <button
           type="button"
-          onClick={() => onChange([...examples, ''])}
+          onClick={handleAdd}
           className="inline-flex items-center gap-1 text-sm font-medium text-navy-500 hover:text-navy-800"
         >
           <Plus className="h-4 w-4" /> Add example
@@ -1090,12 +1103,24 @@ function ErrorsEditor({
   onChange: (v: ErrorDraft[]) => void
   labelCls: string
 }) {
+  const [ids, setIds] = useState<string[]>(() => errors.map(() => Math.random().toString(36).slice(2)))
+
+  const handleAdd = () => {
+    setIds(prev => [...prev, Math.random().toString(36).slice(2)])
+    onChange([...errors, { wrong: '', correct: '' }])
+  }
+
+  const handleDelete = (i: number) => {
+    setIds(prev => prev.filter((_, j) => j !== i))
+    onChange(errors.filter((_, j) => j !== i))
+  }
+
   return (
     <div>
       <label className={labelCls}>Common errors (optional)</label>
       <div className="space-y-2">
         {errors.map((e, i) => (
-          <div key={i} className="flex items-center gap-2">
+          <div key={ids[i] ?? i} className="flex items-center gap-2">
             <input
               className="flex-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 placeholder:text-red-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
               value={e.wrong}
@@ -1119,7 +1144,8 @@ function ErrorsEditor({
             />
             <button
               type="button"
-              onClick={() => onChange(errors.filter((_, j) => j !== i))}
+              aria-label="Remove error example"
+              onClick={() => handleDelete(i)}
               className="shrink-0 text-navy-300 hover:text-red-500"
             >
               <Trash2 className="h-4 w-4" />
@@ -1128,7 +1154,7 @@ function ErrorsEditor({
         ))}
         <button
           type="button"
-          onClick={() => onChange([...errors, { wrong: '', correct: '' }])}
+          onClick={handleAdd}
           className="inline-flex items-center gap-1 text-sm font-medium text-navy-500 hover:text-navy-800"
         >
           <Plus className="h-4 w-4" /> Add error example

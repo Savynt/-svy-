@@ -75,7 +75,7 @@ export async function POST(request: Request): Promise<Response> {
       saved.created ? 201 : 200,
     )
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error while saving the task.'
-    return json({ error: `Failed to save the task: ${message}` }, 500)
+    console.error('[tasks/manual] persist failed:', err)
+    return json({ error: 'Failed to save the task. Please try again.' }, 500)
   }
 }
