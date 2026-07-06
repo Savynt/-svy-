@@ -156,6 +156,8 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
 
   /* derived */
   const isGrammar = skill === 'GRAMMAR'
+  const isIeltsWriting = track === 'IELTS' && skill === 'WRITING'
+  const isIeltsSpeaking = track === 'IELTS' && skill === 'SPEAKING'
   const showPassage = (skill === 'READING' || skill === 'WRITING') && !isGrammar
   const showAudio = skill === 'LISTENING'
   const showDesmos = track === 'SAT' && skill === 'MATH'
@@ -197,6 +199,8 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
     )
 
   const addGroup = () => setGroups(gs => [...gs, emptyGroup(skill)])
+  const addNamedGroup = (instruction: string) =>
+    setGroups(gs => [...gs, { ...emptyGroup(skill), instruction }])
   const dupGroup = (gi: number) =>
     setGroups(gs => [...gs.slice(0, gi + 1), cloneGroup(gs[gi]!), ...gs.slice(gi + 1)])
   const removeGroup = (gi: number) => setGroups(gs => gs.filter((_, i) => i !== gi))
@@ -502,14 +506,57 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
             />
           ))}
 
-          <Button
-            variant="ghost"
-            onClick={addGroup}
-            className="border border-dashed border-navy-200"
-          >
-            <Plus className="h-4 w-4" />
-            {isGrammar ? 'Add exercise' : 'Add question group'}
-          </Button>
+          {isIeltsWriting ? (
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => addNamedGroup('IELTS Writing Task 1 — Describe a visual (graph / chart / map / diagram)')}
+                className="flex-1 border border-dashed border-navy-200"
+              >
+                <Plus className="h-4 w-4" /> Add Writing Task 1
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => addNamedGroup('IELTS Writing Task 2 — Essay response')}
+                className="flex-1 border border-dashed border-navy-200"
+              >
+                <Plus className="h-4 w-4" /> Add Writing Task 2
+              </Button>
+            </div>
+          ) : isIeltsSpeaking ? (
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                variant="ghost"
+                onClick={() => addNamedGroup('Speaking Part 1 — Introduction & interview (familiar topics)')}
+                className="flex-1 border border-dashed border-navy-200"
+              >
+                <Plus className="h-4 w-4" /> Add Part 1
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => addNamedGroup('Speaking Part 2 — Long turn (cue card, speak for 2 minutes)')}
+                className="flex-1 border border-dashed border-navy-200"
+              >
+                <Plus className="h-4 w-4" /> Add Part 2
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => addNamedGroup('Speaking Part 3 — Two-way discussion (abstract questions)')}
+                className="flex-1 border border-dashed border-navy-200"
+              >
+                <Plus className="h-4 w-4" /> Add Part 3
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              onClick={addGroup}
+              className="border border-dashed border-navy-200"
+            >
+              <Plus className="h-4 w-4" />
+              {isGrammar ? 'Add exercise' : 'Add question group'}
+            </Button>
+          )}
 
           {error && (
             <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
