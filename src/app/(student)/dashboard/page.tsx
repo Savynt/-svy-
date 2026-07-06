@@ -172,12 +172,6 @@ export default async function DashboardPage() {
       icon: TrendingUp,
     },
     {
-      label: 'Skills tracked',
-      value: skillsTracked.toLocaleString('en-US'),
-      hint: skillsTracked === 0 ? 'Start practising to track' : 'Listening · Reading · Speaking · Writing',
-      icon: Target,
-    },
-    {
       label: 'Day streak',
       value: '0',
       hint: 'Practice today to begin',

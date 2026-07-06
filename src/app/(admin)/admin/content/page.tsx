@@ -65,8 +65,20 @@ async function deleteTask(formData: FormData) {
   if (!can(session.role, 'task:moderate')) {
     throw new Error('Forbidden: deleting tasks requires moderation rights.')
   }
-  // Children (groups, questions, attempts) cascade on delete.
-  await prisma.task.delete({ where: { id: taskId } })
+  try {
+    // Explicit deletion order avoids the diamond-cascade conflict:
+    // both Attempt→Answer and Question→Answer cascade would fire simultaneously.
+    await prisma.$transaction([
+      prisma.answer.deleteMany({ where: { attempt: { taskId } } }),
+      prisma.attempt.deleteMany({ where: { taskId } }),
+      prisma.question.deleteMany({ where: { taskId } }),
+      prisma.questionGroup.deleteMany({ where: { taskId } }),
+      prisma.task.delete({ where: { id: taskId } }),
+    ])
+  } catch (err) {
+    console.error('[deleteTask] failed:', err)
+    throw new Error('Failed to delete task. Please try again.')
+  }
   revalidatePath('/admin/content')
 }
 
