@@ -1,6 +1,7 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
+import { getSession } from '@/lib/auth/session'
 import { TestRunner, type RunnerTask } from '@/components/test/TestRunner'
 import type { Prisma } from '@prisma/client'
 
@@ -37,6 +38,11 @@ export default async function TestPage({
   params: Promise<{ taskId: string }>
 }) {
   const { taskId } = await params
+
+  const session = await getSession()
+  if (!session) {
+    redirect(`/login?next=/test/${taskId}`)
+  }
 
   const task = await prisma.task.findFirst({
     // taskId may arrive as the cuid id or the human slug.

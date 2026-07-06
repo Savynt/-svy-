@@ -185,13 +185,9 @@ export function TestRunner({ task }: { task: RunnerTask }) {
     }
   }, [])
 
-  const setAnswer = useCallback((questionId: string, value: AnswerValue, questionType?: QuestionType, points?: number) => {
+  const setAnswer = useCallback((questionId: string, value: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }))
-    if (task.type === 'PRACTICE' && questionType && INSTANT_CHECK_TYPES.has(questionType) && !lockedQuestions.has(questionId)) {
-      void checkPracticeAnswer(questionId, value, points ?? 1)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task.type, lockedQuestions, checkPracticeAnswer])
+  }, [])
 
   const handleSubmit = useCallback(async () => {
     if (submitted || submitting) return
@@ -458,16 +454,15 @@ export function TestRunner({ task }: { task: RunnerTask }) {
 
                   <div className="space-y-6">
                     {group.questions.map((q) => {
-                      const r = submitted ? resultById.get(q.id) : instantResults[q.id]
-                      const qLocked = submitted || lockedQuestions.has(q.id)
+                      const r = submitted ? resultById.get(q.id) : undefined
                       return (
                         <div key={q.id}>
                           <QuestionRenderer
                             question={q}
                             value={answers[q.id]}
-                            onChange={(v) => setAnswer(q.id, v, q.type, q.points)}
+                            onChange={(v) => setAnswer(q.id, v)}
                             displayNumber={numberById.get(q.id) ?? q.order}
-                            locked={qLocked}
+                            locked={submitted}
                             isCorrect={r ? r.isCorrect : undefined}
                           />
                           {r && <ResultFeedback result={r} userAnswer={answers[q.id]} />}
