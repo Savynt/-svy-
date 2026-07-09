@@ -347,7 +347,9 @@ model Attempt {
 
   answers Answer[]
 
-  @@index([userId])
+  // Dashboard + coach pages repeatedly filter attempts by userId + status;
+  // the composite also serves userId-only prefix lookups.
+  @@index([userId, status])
   @@index([taskId])
 }
 
