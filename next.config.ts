@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { securityHeaders } from './src/lib/security/headers';
+import { staticSecurityHeaders } from './src/lib/security/headers';
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
@@ -9,8 +9,9 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/(.*)',
-        // Report-Only: browser logs violations without blocking. Flip enforce:true once clean.
-        headers: securityHeaders({ enforce: false }),
+        // Request-independent headers only. The Content-Security-Policy is
+        // nonce-based and emitted per-request by the Proxy (src/proxy.ts).
+        headers: staticSecurityHeaders(),
       },
     ]
   },

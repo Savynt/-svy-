@@ -78,25 +78,32 @@ const rl = await rateLimit(`forgot:${ipFromRequest(request)}`, 3, 600_000)
 
 ---
 
-## 2. Security headers in `next.config.ts`
+## 2. Security headers — split between `next.config.ts` and the Proxy
 
-`securityHeaders()` returns `{ key, value }[]`, ready to spread into Next's
-`headers()`. CSP ships **Report-Only** by default — flip `enforce: true` once the
-violation reports are clean.
+The header set is split in two:
+
+- **`staticSecurityHeaders()`** — request-independent headers (HSTS,
+  X-Frame-Options, nosniff, Referrer-Policy, …). Spread into `next.config.ts`
+  `headers()`.
+- **`buildCspHeaderValue(nonce)`** — the **enforcing**, nonce-based
+  Content-Security-Policy, emitted per-request by the Proxy (`src/proxy.ts`).
+
+The CSP is nonce-based (not `'unsafe-inline'` on scripts): the Proxy mints a
+fresh nonce per request and Next stamps it onto its framework/inline scripts,
+so exactly Next's own scripts run and injected ones cannot.
 
 ```ts
 // next.config.ts  (orchestrator applies this — do not edit it from a helper task)
 import type { NextConfig } from 'next'
-import { securityHeaders } from '@/lib/security/headers'
+import { staticSecurityHeaders } from '@/lib/security/headers'
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
   async headers() {
     return [
       {
-        // Apply to every route.
-        source: '/:path*',
-        headers: securityHeaders(), // Report-Only CSP; pass { enforce: true } to enforce.
+        source: '/(.*)',
+        headers: staticSecurityHeaders(), // CSP is set per-request in src/proxy.ts
       },
     ]
   },
@@ -105,15 +112,30 @@ const nextConfig: NextConfig = {
 export default nextConfig
 ```
 
+```ts
+// src/proxy.ts (excerpt) — per-request nonce + enforced CSP
+const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+const csp = buildCspHeaderValue(nonce)
+const requestHeaders = new Headers(request.headers)
+requestHeaders.set('x-nonce', nonce)
+requestHeaders.set('Content-Security-Policy', csp) // so Next nonces its scripts
+const res = NextResponse.next({ request: { headers: requestHeaders } })
+res.headers.set('Content-Security-Policy', csp)     // so the browser enforces it
+```
+
 Notes:
 
-- `headers()` runs at config load (Node), so importing from `@/lib/security/headers`
-  is fine — the module is pure and pulls in no client/runtime-only code.
-- Start in Report-Only, watch the browser console / your report endpoint, then
-  switch to `securityHeaders({ enforce: true })`.
+- Nonce-based CSP requires **dynamic rendering**. The root layout already reads
+  cookies (`getLocale()`), so the whole app renders dynamically and every page
+  receives a nonce — no static page ships nonce-less (which would white-screen).
+- `style-src` keeps `'unsafe-inline'`: nonces can't cover inline `style=`
+  attributes (the UI uses a few). Do NOT add a nonce to `style-src` — mixing it
+  with `'unsafe-inline'` makes browsers ignore the latter and breaks those styles.
+- `'strict-dynamic'` on `script-src` trusts scripts loaded by the nonce'd script
+  (Next's chunks), so no host allow-list is needed for first-party JS.
 - When you add third-party origins (analytics, a payments SDK, an SMTP web API),
-  widen the matching directive in `buildCsp()` (`headers.ts`) — allow-list the
-  **exact** origin, never a wildcard.
+  widen the matching directive in `buildCspHeaderValue()` (`headers.ts`) —
+  allow-list the **exact** origin, never a wildcard.
 - HSTS only activates over HTTPS; it's inert on `localhost`.
 
 ---
