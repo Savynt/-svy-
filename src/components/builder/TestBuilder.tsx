@@ -20,8 +20,15 @@ import {
 /* Draft types                                                          */
 /* ------------------------------------------------------------------ */
 
-interface OptionDraft { text: string; correct: boolean }
+/** Stable client-only id for React keys — never sent to the server. */
+const uid = () =>
+  typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `id-${Math.random().toString(36).slice(2)}-${Date.now()}`
+
+interface OptionDraft { uid: string; text: string; correct: boolean }
 interface QuestionDraft {
+  uid: string
   prompt: string
   options: OptionDraft[]
   answerText: string
@@ -31,6 +38,7 @@ interface QuestionDraft {
 }
 interface ErrorDraft { wrong: string; correct: string }
 interface GroupDraft {
+  uid: string
   type: BuilderQuestionType
   instruction: string
   explanation: string
@@ -81,9 +89,10 @@ const MODULE_CARDS = [
 function emptyQuestion(type: BuilderQuestionType): QuestionDraft {
   const hasOptions = BUILDER_TYPE_META[type].hasOptions
   return {
+    uid: uid(),
     prompt: '',
     options: hasOptions
-      ? [{ text: '', correct: false }, { text: '', correct: false }]
+      ? [{ uid: uid(), text: '', correct: false }, { uid: uid(), text: '', correct: false }]
       : [],
     answerText: '',
     explanation: '',
@@ -97,15 +106,20 @@ function emptyGroup(skill?: string): GroupDraft {
     ? (SKILL_ALLOWED_TYPES[skill] ?? ['MULTIPLE_CHOICE'])
     : ['MULTIPLE_CHOICE']
   const type = (allowed[0] ?? 'MULTIPLE_CHOICE') as BuilderQuestionType
-  return { type, instruction: '', explanation: '', examples: [], errors: [], questions: [emptyQuestion(type)] }
+  return { uid: uid(), type, instruction: '', explanation: '', examples: [], errors: [], questions: [emptyQuestion(type)] }
 }
 
 function cloneGroup(g: GroupDraft): GroupDraft {
   return {
     ...g,
+    uid: uid(),
     examples: [...g.examples],
     errors: g.errors.map(e => ({ ...e })),
-    questions: g.questions.map(q => ({ ...q, options: q.options.map(o => ({ ...o })) })),
+    questions: g.questions.map(q => ({
+      ...q,
+      uid: uid(),
+      options: q.options.map(o => ({ ...o, uid: uid() })),
+    })),
   }
 }
 
@@ -254,7 +268,7 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
           : {
               ...g,
               questions: g.questions.map((q, j) =>
-                j !== qi ? q : { ...q, options: [...q.options, { text: '', correct: false }] },
+                j !== qi ? q : { ...q, options: [...q.options, { uid: uid(), text: '', correct: false }] },
               ),
             },
       ),
@@ -484,7 +498,7 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
         <div className="space-y-4">
           {groups.map((group, gi) => (
             <GroupCard
-              key={gi}
+              key={group.uid}
               gi={gi}
               group={group}
               isGrammar={isGrammar}
@@ -1054,7 +1068,7 @@ function GroupCard({
         <div className="space-y-3">
           {group.questions.map((q, qi) => (
             <QuestionCard
-              key={qi}
+              key={q.uid}
               qi={qi}
               q={q}
               group={group}
@@ -1323,7 +1337,7 @@ function QuestionEditor({
     return (
       <div className="mt-3 space-y-2">
         {question.options.map((opt, oi) => (
-          <div key={oi} className="flex items-center gap-2">
+          <div key={opt.uid} className="flex items-center gap-2">
             <input
               type={single ? 'radio' : 'checkbox'}
               checked={opt.correct}
