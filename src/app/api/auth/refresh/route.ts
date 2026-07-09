@@ -21,51 +21,58 @@ export async function POST(request: Request): Promise<Response> {
 
   if (!refreshToken) return fail()
 
-  const claims = await verifyRefreshToken(refreshToken)
-  if (!claims?.sid || !claims.sub) return fail()
+  try {
+    const claims = await verifyRefreshToken(refreshToken)
+    if (!claims?.sid || !claims.sub) return fail()
 
-  const session = await prisma.session.findUnique({
-    where: { id: claims.sid },
-    select: { id: true, userId: true, revokedAt: true, expiresAt: true },
-  })
+    const session = await prisma.session.findUnique({
+      where: { id: claims.sid },
+      select: { id: true, userId: true, revokedAt: true, expiresAt: true },
+    })
 
-  // Reject if the session is missing, revoked, expired, or doesn't match the token's user.
-  if (
-    !session ||
-    session.revokedAt ||
-    session.userId !== claims.sub ||
-    session.expiresAt.getTime() <= Date.now()
-  ) {
-    return fail()
+    // Reject if the session is missing, revoked, expired, or doesn't match the token's user.
+    if (
+      !session ||
+      session.revokedAt ||
+      session.userId !== claims.sub ||
+      session.expiresAt.getTime() <= Date.now()
+    ) {
+      return fail()
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { id: true, role: true },
+    })
+    if (!user) return fail()
+
+    // Rotate: revoke the old session and open a new one atomically.
+    const [, newSession] = await prisma.$transaction([
+      prisma.session.update({
+        where: { id: session.id },
+        data: { revokedAt: new Date() },
+      }),
+      prisma.session.create({
+        data: {
+          userId: user.id,
+          userAgent: request.headers.get('user-agent') ?? undefined,
+          expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+        },
+        select: { id: true },
+      }),
+    ])
+
+    const [accessToken, newRefreshToken] = await Promise.all([
+      signAccessToken(user.id, user.role),
+      signRefreshToken(user.id, newSession.id),
+    ])
+    await setAuthCookies(accessToken, newRefreshToken)
+
+    return Response.json({ ok: true })
+  } catch (err) {
+    // Transient server/DB error — do NOT clear cookies (avoid logging the user
+    // out over a hiccup); let the client retry.
+    console.error('[auth/refresh] failed:', err)
+    return Response.json({ ok: false, error: 'Could not refresh the session.' }, { status: 500 })
   }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.userId },
-    select: { id: true, role: true },
-  })
-  if (!user) return fail()
-
-  // Rotate: revoke the old session and open a new one atomically.
-  const [, newSession] = await prisma.$transaction([
-    prisma.session.update({
-      where: { id: session.id },
-      data: { revokedAt: new Date() },
-    }),
-    prisma.session.create({
-      data: {
-        userId: user.id,
-        userAgent: request.headers.get('user-agent') ?? undefined,
-        expiresAt: new Date(Date.now() + SESSION_TTL_MS),
-      },
-      select: { id: true },
-    }),
-  ])
-
-  const [accessToken, newRefreshToken] = await Promise.all([
-    signAccessToken(user.id, user.role),
-    signRefreshToken(user.id, newSession.id),
-  ])
-  await setAuthCookies(accessToken, newRefreshToken)
-
-  return Response.json({ ok: true })
 }

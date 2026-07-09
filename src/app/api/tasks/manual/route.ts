@@ -29,9 +29,9 @@ function statusFor(role: string, publish: boolean): TaskStatus {
 
 export async function POST(request: Request): Promise<Response> {
   const session = await getSession()
-  if (!session) return json({ error: 'Unauthorized. Please sign in.' }, 401)
+  if (!session) return json({ ok: false, error: 'Unauthorized. Please sign in.' }, 401)
   if (!can(session.role, 'task:create')) {
-    return json({ error: 'You do not have permission to create tasks.' }, 403)
+    return json({ ok: false, error: 'You do not have permission to create tasks.' }, 403)
   }
 
   // --- body --------------------------------------------------------------
@@ -39,12 +39,12 @@ export async function POST(request: Request): Promise<Response> {
   try {
     raw = await request.json()
   } catch {
-    return json({ error: 'Malformed JSON body.' }, 400)
+    return json({ ok: false, error: 'Malformed JSON body.' }, 400)
   }
 
   const parsed = builderTaskSchema.safeParse(raw)
   if (!parsed.success) {
-    return json({ error: 'Some fields need fixing.', issues: parsed.error.flatten() }, 400)
+    return json({ ok: false, error: 'Some fields need fixing.', issues: parsed.error.flatten() }, 400)
   }
 
   // --- lower to the unified contract (validates answer keys) -------------
@@ -53,7 +53,7 @@ export async function POST(request: Request): Promise<Response> {
     normalized = builderToNormalized(parsed.data)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Invalid answer key.'
-    return json({ error: message }, 400)
+    return json({ ok: false, error: message }, 400)
   }
 
   // --- persist -----------------------------------------------------------
@@ -76,6 +76,6 @@ export async function POST(request: Request): Promise<Response> {
     )
   } catch (err) {
     console.error('[tasks/manual] persist failed:', err)
-    return json({ error: 'Failed to save the task. Please try again.' }, 500)
+    return json({ ok: false, error: 'Failed to save the task. Please try again.' }, 500)
   }
 }

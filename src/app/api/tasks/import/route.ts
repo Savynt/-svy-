@@ -44,7 +44,7 @@ interface ImportPreviewResponse {
   }
 }
 
-function json(data: ImportPreviewResponse | { error: string; issues?: unknown }, status = 200): Response {
+function json(data: ImportPreviewResponse | { ok: false; error: string; issues?: unknown }, status = 200): Response {
   return Response.json(data, { status })
 }
 
@@ -57,10 +57,10 @@ export async function POST(request: Request): Promise<Response> {
   // --- auth + permission -------------------------------------------------
   const session = await getSession()
   if (!session) {
-    return json({ error: 'Unauthorized. Please sign in.' }, 401)
+    return json({ ok: false, error: 'Unauthorized. Please sign in.' }, 401)
   }
   if (!can(session.role, 'task:import')) {
-    return json({ error: 'You do not have permission to import tasks.' }, 403)
+    return json({ ok: false, error: 'You do not have permission to import tasks.' }, 403)
   }
 
   // --- body --------------------------------------------------------------
@@ -69,11 +69,11 @@ export async function POST(request: Request): Promise<Response> {
     const raw: unknown = await request.json()
     const result = bodySchema.safeParse(raw)
     if (!result.success) {
-      return json({ error: 'Invalid request body.', issues: result.error.flatten() }, 400)
+      return json({ ok: false, error: 'Invalid request body.', issues: result.error.flatten() }, 400)
     }
     body = result.data
   } catch {
-    return json({ error: 'Malformed JSON body.' }, 400)
+    return json({ ok: false, error: 'Malformed JSON body.' }, 400)
   }
 
   // --- parse -------------------------------------------------------------
@@ -136,6 +136,6 @@ export async function POST(request: Request): Promise<Response> {
     )
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error while saving the task.'
-    return json({ error: `Failed to save the imported task: ${message}` }, 500)
+    return json({ ok: false, error: `Failed to save the imported task: ${message}` }, 500)
   }
 }

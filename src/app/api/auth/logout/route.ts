@@ -13,13 +13,18 @@ export async function POST(): Promise<Response> {
   const refreshToken = jar.get(REFRESH_COOKIE)?.value
 
   if (refreshToken) {
-    const claims = await verifyRefreshToken(refreshToken)
-    if (claims?.sid) {
-      // Mark the session revoked if it isn't already. Tolerate a missing row.
-      await prisma.session.updateMany({
-        where: { id: claims.sid, revokedAt: null },
-        data: { revokedAt: new Date() },
-      })
+    try {
+      const claims = await verifyRefreshToken(refreshToken)
+      if (claims?.sid) {
+        // Mark the session revoked if it isn't already. Tolerate a missing row.
+        await prisma.session.updateMany({
+          where: { id: claims.sid, revokedAt: null },
+          data: { revokedAt: new Date() },
+        })
+      }
+    } catch (err) {
+      // Never block logout on a revocation hiccup — we still clear cookies below.
+      console.error('[auth/logout] session revoke failed:', err)
     }
   }
 
