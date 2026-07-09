@@ -1,5 +1,5 @@
-/**
- * Recommended HTTP security headers for SVY.
+﻿/**
+ * Recommended HTTP security headers for Savynt.
  *
  * Next.js 16 applies headers via `headers()` in `next.config.ts` (NOT this file —
  * the orchestrator wires it; see `src/lib/security/README.md`). This module just
@@ -40,7 +40,7 @@ function buildCsp(): string {
     "base-uri 'self'",
     "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    "img-src 'self' data: blob: https://i.imgur.com",
     "font-src 'self' data:",
     "connect-src 'self'",
     "form-action 'self'",
@@ -71,7 +71,7 @@ export interface SecurityHeaderOptions {
  *  - X-Content-Type-Options nosniff: stop MIME-type sniffing.
  *  - Referrer-Policy: send origin cross-site, full URL same-origin — protects
  *    query strings (e.g. reset codes) from leaking to third parties.
- *  - Permissions-Policy: deny powerful APIs SVY never uses (camera, mic, geo, FLoC).
+ *  - Permissions-Policy: deny powerful APIs Savynt never uses (camera, mic, geo, FLoC).
  *  - X-DNS-Prefetch-Control on: minor perf win, no privacy cost for first-party.
  */
 export function securityHeaders(options: SecurityHeaderOptions = {}): SecurityHeader[] {

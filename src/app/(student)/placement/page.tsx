@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { Compass, Gauge, Clock, Sparkles, ShieldCheck, ListChecks } from 'lucide-react'
 import { getCurrentUser } from '@/lib/auth/session'
 import { Card, CardBody } from '@/components/ui/Card'
@@ -10,7 +10,7 @@ import { plannedQuestionCount, levelLabel } from '@/lib/placement'
 export const metadata: Metadata = {
   title: 'Placement test',
   description:
-    'Take the SVY placement test to find your English level (A1–C2) and a rough IELTS band, then get a personalised study path.',
+    'Take the Savynt placement test to find your English level (A1–C2) and a rough IELTS band, then get a personalised study path.',
 }
 
 interface Highlight {

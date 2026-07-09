@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
   LayoutDashboard,
@@ -19,7 +19,7 @@ import { cn } from '@/lib/cn'
 
 export const metadata: Metadata = {
   title: 'Admin',
-  description: 'SVY platform administration — users, content, pricing and analytics.',
+  description: 'Savynt platform administration — users, content, pricing and analytics.',
   robots: { index: false, follow: false },
 }
 
@@ -70,7 +70,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         {/* Sidebar (desktop) */}
         <aside className="hidden w-64 shrink-0 border-r border-navy-100 bg-white lg:flex lg:flex-col lg:sticky lg:top-0 lg:h-screen lg:self-start">
           <div className="flex h-16 items-center border-b border-navy-100 px-5">
-            <Link href="/admin" className="flex items-center" aria-label="SVY admin home">
+            <Link href="/admin" className="flex items-center" aria-label="Savynt admin home">
               <Logo />
             </Link>
           </div>
@@ -117,7 +117,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           {/* Top bar (mobile + desktop context) */}
           <header className="sticky top-0 z-30 border-b border-navy-100 bg-white/90 backdrop-blur-md">
             <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
-              <Link href="/admin" className="flex items-center lg:hidden" aria-label="SVY admin home">
+              <Link href="/admin" className="flex items-center lg:hidden" aria-label="Savynt admin home">
                 <Logo />
               </Link>
               <Badge tone="navy" className="hidden sm:inline-flex">

@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { ArrowRight, Compass } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { Button } from '@/components/ui/Button'
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 const SUGGESTIONS = [
   { href: '/pricing', label: 'Pricing' },
   { href: '/seminars', label: 'Free seminars' },
-  { href: '/about', label: 'About SVY' },
+  { href: '/about', label: 'About Savynt' },
   { href: '/register', label: 'Create an account' },
 ] as const
 
@@ -15,7 +15,7 @@ export default function NotFound() {
     <main className="flex min-h-screen flex-col bg-sky-50">
       <header className="border-b border-navy-100 bg-sky-50/85 backdrop-blur-md">
         <div className="container-app flex h-16 items-center">
-          <Link href="/" aria-label="SVY home" className="flex items-center">
+          <Link href="/" aria-label="Savynt home" className="flex items-center">
             <Logo />
           </Link>
         </div>

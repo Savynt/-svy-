@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import type { SeminarPlatform } from '@prisma/client'
 import { CalendarDays, Clock, PlayCircle, Radio, Users, Video } from 'lucide-react'
 import { PageHero } from '@/components/PageHero'
@@ -12,10 +12,10 @@ import { SEMINARS, type MarketingSeminar } from '@/data/marketing'
 export const metadata: Metadata = {
   title: 'Free live seminars',
   description:
-    'Join free SVY seminars on IELTS, SAT and General English prep — live on Google Meet and YouTube Live, with recordings afterwards. No subscription required.',
+    'Join free Savynt seminars on IELTS, SAT and General English prep — live on Google Meet and YouTube Live, with recordings afterwards. No subscription required.',
   alternates: { canonical: '/seminars' },
   openGraph: {
-    title: 'Free SVY seminars — live on Google Meet & YouTube',
+    title: 'Free Savynt seminars — live on Google Meet & YouTube',
     description:
       'Free live sessions on IELTS, SAT and General English preparation. Register and get the recording afterwards.',
     url: '/seminars',

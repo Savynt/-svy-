@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import type { ComponentType } from 'react'
 import {
   ArrowRight,
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
-    title: 'SVY — IELTS, SAT & General English preparation',
+    title: 'Savynt — IELTS, SAT & General English preparation',
     description:
       'Real exam-style mock tests with answer keys, instant scoring and band estimates. One subscription — 20,000 UZS / month.',
     url: '/',
@@ -172,7 +172,7 @@ export default function LandingPage() {
             align="center"
             eyebrow="Choose your exam"
             title="Three ways to prepare"
-            subtitle="Whether you need IELTS or SAT for abroad, or want to build everyday General English skills — SVY has a full track for you."
+            subtitle="Whether you need IELTS or SAT for abroad, or want to build everyday General English skills — Savynt has a full track for you."
           />
         </AnimateIn>
         <AnimateStagger className="mt-10 grid gap-6 md:grid-cols-3">
@@ -230,12 +230,12 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 5 — Why SVY */}
+      {/* 5 — Why Savynt */}
       <section className="container-app py-14 sm:py-16">
         <AnimateIn>
           <SectionHeading
             align="center"
-            eyebrow="Why SVY"
+            eyebrow="Why Savynt"
             title="Everything you need to prepare"
             subtitle="A complete prep toolkit, not a pile of PDFs — all included for one monthly price."
           />

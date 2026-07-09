@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 
@@ -71,7 +71,7 @@ export default function GlobalError({
             Something went wrong
           </h1>
           <p style={{ marginTop: '0.75rem', color: '#356391', lineHeight: 1.55 }}>
-            We hit an unexpected error and couldn&apos;t load SVY. Please try again — if it keeps
+            We hit an unexpected error and couldn&apos;t load Savynt. Please try again — if it keeps
             happening, head back to the home page.
           </p>
           {error.digest && (

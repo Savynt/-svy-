@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import {
   Check,
   CheckCircle2,
@@ -21,10 +21,10 @@ import { Faq } from './Faq'
 export const metadata: Metadata = {
   title: 'Pricing — one plan, full access',
   description:
-    'Simple pricing for SVY: from 20,000 UZS / month for full access to every IELTS, SAT and General English practice test, the vocabulary trainer and all grammar lessons. Pay locally with Click, Payme or Uzcard.',
+    'Simple pricing for Savynt: from 20,000 UZS / month for full access to every IELTS, SAT and General English practice test, the vocabulary trainer and all grammar lessons. Pay locally with Click, Payme or Uzcard.',
   alternates: { canonical: '/pricing' },
   openGraph: {
-    title: 'SVY Pricing — one plan, full access',
+    title: 'Savynt Pricing — one plan, full access',
     description:
       'From 20,000 UZS / month. Every IELTS, SAT and General English test, vocabulary and grammar — pay with Click, Payme or Uzcard.',
     url: '/pricing',

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -80,7 +80,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     <div className="flex min-h-screen flex-col bg-sky-50">
       <header className="sticky top-0 z-40 border-b border-navy-100 bg-sky-50/85 backdrop-blur-md">
         <nav className="container-app flex h-16 items-center justify-between gap-4">
-          <Link href="/dashboard" className="flex items-center" aria-label="SVY home">
+          <Link href="/dashboard" className="flex items-center" aria-label="Savynt home">
             <Logo />
           </Link>
 

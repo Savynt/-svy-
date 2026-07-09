@@ -1,5 +1,5 @@
-/**
- * Formatting helpers for the SVY platform.
+﻿/**
+ * Formatting helpers for the Savynt platform.
  * Prices are always shown in UZS with a thousands separator, e.g. 20000 -> "20,000 UZS".
  */
 

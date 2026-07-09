@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { forwardRef, useId } from 'react'
 import type { InputHTMLAttributes, ReactNode } from 'react'
@@ -16,7 +16,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 /**
- * Labeled text input for the SVY platform.
+ * Labeled text input for the Savynt platform.
  *
  * T9 / autocorrect protection is BAKED IN — every input ships with
  * autoCorrect / autoCapitalize / autoComplete off and spellCheck disabled so

@@ -61,7 +61,7 @@ export function Footer() {
       </div>
       <div className="border-t border-navy-100">
         <div className="container-app flex flex-col items-center justify-between gap-2 py-5 text-xs text-navy-400 sm:flex-row">
-          <p>© {new Date().getFullYear()} SVY. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Savynt. All rights reserved.</p>
           <p>Made for learners in Uzbekistan 🇺🇿</p>
         </div>
       </div>

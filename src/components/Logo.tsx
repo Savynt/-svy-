@@ -17,7 +17,7 @@ export function Logo({ size = 36, withWordmark = true, className, variant = 'nav
     <span className={cn('inline-flex items-center gap-2.5', className)}>
       <Image
         src="/logo.png"
-        alt="SVY"
+        alt="Savynt"
         width={size}
         height={size}
         className="shrink-0 object-contain"
@@ -25,7 +25,7 @@ export function Logo({ size = 36, withWordmark = true, className, variant = 'nav
       />
       {withWordmark && (
         <span className="font-display text-xl font-extrabold tracking-tight" style={{ color: wordmarkColor }}>
-          SVY
+          Savynt
         </span>
       )}
     </span>

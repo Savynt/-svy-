@@ -1261,7 +1261,7 @@ function QuestionCard({
         className={cn(textareaCls, 'mt-2 text-sm')}
         value={q.imageUrl}
         onChange={e => onUpdate({ imageUrl: e.target.value })}
-        placeholder="Image URL (optional) — Google Drive / Imgur share link"
+        placeholder="Image URL (optional) — direct Imgur link, e.g. https://i.imgur.com/xxxx.png"
       />
       {q.imageUrl && (
         <img

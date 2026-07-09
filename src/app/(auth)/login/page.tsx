@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
@@ -150,7 +150,7 @@ export default function LoginPage() {
       </Button>
 
       <p className="mt-6 text-center text-sm text-navy-500">
-        New to SVY?{' '}
+        New to Savynt?{' '}
         <Link
           href="/register"
           className="font-semibold text-navy-700 underline-offset-2 hover:underline"

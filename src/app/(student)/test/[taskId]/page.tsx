@@ -14,7 +14,7 @@ import type { Prisma } from '@prisma/client'
  */
 
 export const metadata: Metadata = {
-  title: 'Test · SVY',
+  title: 'Test · Savynt',
   robots: { index: false, follow: false },
 }
 

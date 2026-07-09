@@ -1,9 +1,9 @@
-import type { MetadataRoute } from 'next'
+﻿import type { MetadataRoute } from 'next'
 
 /**
  * PWA web app manifest (Next.js 16 metadata route).
  *
- * Makes SVY installable on phones — valuable for UZ traffic, which is
+ * Makes Savynt installable on phones — valuable for UZ traffic, which is
  * overwhelmingly mobile. Served at `/manifest.webmanifest` and linked
  * automatically by Next from the document head.
  *
@@ -15,8 +15,8 @@ import type { MetadataRoute } from 'next'
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'SVY — IELTS, SAT & General English',
-    short_name: 'SVY',
+    name: 'Savynt — IELTS, SAT & General English',
+    short_name: 'Savynt',
     description:
       'Practice IELTS, SAT and General English with real exam-style tests, instant scoring and progress tracking. Built for learners in Uzbekistan.',
     start_url: '/',

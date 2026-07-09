@@ -17,7 +17,7 @@ const schema = z.object({
 
   // Public
   NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
-  NEXT_PUBLIC_APP_NAME: z.string().default('SVY'),
+  NEXT_PUBLIC_APP_NAME: z.string().default('Savynt'),
 })
 
 export const env = schema.parse({

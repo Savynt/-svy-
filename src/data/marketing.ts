@@ -1,4 +1,4 @@
-// Static marketing data for the public site.
+﻿// Static marketing data for the public site.
 // The DB (Plan / Seminar) is empty in this build, so the marketing pages render
 // from these constants. Prices mirror the founder's spec: 20 000 UZS / month.
 // formatUzs lives in '@/lib/format' — never re-implement currency formatting here.
@@ -122,7 +122,7 @@ export const FAQS: FaqItem[] = [
     a: 'Regularly. We add fresh General English sets and IELTS & SAT full mock tests every month. The 3-month and yearly plans get priority access to new material as soon as it ships.',
   },
   {
-    q: 'Is SVY for school or for work?',
+    q: 'Is Savynt for school or for work?',
     a: 'Both. Whether you need General English skills for university or an IELTS / SAT score for study and work abroad, one subscription covers every track, level and skill.',
   },
   {

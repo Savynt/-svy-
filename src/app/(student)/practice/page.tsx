@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import {
   Headphones,
   BookOpen,
@@ -19,7 +19,7 @@ import { TaskRow } from '@/components/student/TaskRow'
 export const metadata: Metadata = {
   title: 'Practice',
   description:
-    'Browse the SVY practice library — IELTS, SAT and General English tests across Listening, Reading, Speaking and Writing.',
+    'Browse the Savynt practice library — IELTS, SAT and General English tests across Listening, Reading, Speaking and Writing.',
 }
 
 type Track = 'IELTS' | 'SAT' | 'GENERAL_ENGLISH' | 'CEFR' | 'MULTILEVEL'

@@ -1,11 +1,11 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Logo } from '@/components/Logo'
 
 export const metadata: Metadata = {
   title: 'Account',
   description:
-    'Sign in or create your SVY account to practice IELTS, SAT and General English with real exam-style tests and instant scoring.',
+    'Sign in or create your Savynt account to practice IELTS, SAT and General English with real exam-style tests and instant scoring.',
   robots: { index: false, follow: true },
 }
 
@@ -34,7 +34,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="relative z-10 flex w-full max-w-md flex-col items-center">
         <Link
           href="/"
-          aria-label="SVY home"
+          aria-label="Savynt home"
           className="rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 focus-visible:ring-offset-2 focus-visible:ring-offset-sky-50"
         >
           <Logo size={44} variant="navy" />

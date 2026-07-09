@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+﻿import type { ReactNode } from 'react'
 import Link from 'next/link'
 import {
   LayoutDashboard,
@@ -78,7 +78,7 @@ export default async function CoachLayout({ children }: { children: ReactNode })
       <header className="sticky top-0 z-40 border-b border-navy-100 bg-sky-50/90 backdrop-blur-md">
         <div className="container-app flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Link href="/coach" className="flex items-center" aria-label="SVY coach home">
+            <Link href="/coach" className="flex items-center" aria-label="Savynt coach home">
               <Logo />
             </Link>
             <span className="hidden sm:inline-flex">

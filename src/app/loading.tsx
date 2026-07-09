@@ -1,4 +1,4 @@
-import { Logo } from '@/components/Logo'
+﻿import { Logo } from '@/components/Logo'
 import { Spinner } from '@/components/ui/Spinner'
 
 /**
@@ -11,7 +11,7 @@ export default function RootLoading() {
       <Logo size={48} />
       <div className="flex flex-col items-center gap-3">
         <Spinner size="lg" />
-        <p className="text-sm font-medium text-navy-500">Loading SVY…</p>
+        <p className="text-sm font-medium text-navy-500">Loading Savynt…</p>
       </div>
     </div>
   )

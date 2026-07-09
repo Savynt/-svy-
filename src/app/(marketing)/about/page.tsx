@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { GraduationCap, HeartHandshake, Languages, MapPin, Target, Wallet } from 'lucide-react'
 import { PageHero } from '@/components/PageHero'
 import { SectionHeading } from '@/components/ui/SectionHeading'
@@ -6,12 +6,12 @@ import { Card, CardBody } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 
 export const metadata: Metadata = {
-  title: 'About SVY',
+  title: 'About Savynt',
   description:
-    'SVY is exam prep built for Uzbekistan — affordable, real exam-style practice for IELTS, SAT and General English, with instant scoring and clear progress. Our mission is simple: make a great score reachable for every learner.',
+    'Savynt is exam prep built for Uzbekistan — affordable, real exam-style practice for IELTS, SAT and General English, with instant scoring and clear progress. Our mission is simple: make a great score reachable for every learner.',
   alternates: { canonical: '/about' },
   openGraph: {
-    title: 'About SVY — exam prep built for Uzbekistan',
+    title: 'About Savynt — exam prep built for Uzbekistan',
     description:
       'Affordable, exam-style IELTS, SAT and General English practice with instant scoring and clear progress, made for learners in Uzbekistan.',
     url: '/about',
@@ -53,7 +53,7 @@ export default function AboutPage() {
       <PageHero
         eyebrow="About"
         title="Exam prep built for Uzbekistan"
-        subtitle="SVY helps learners across Uzbekistan reach the IELTS, SAT and General English scores they need — for university, for work abroad, and for themselves."
+        subtitle="Savynt helps learners across Uzbekistan reach the IELTS, SAT and General English scores they need — for university, for work abroad, and for themselves."
         breadcrumbs={[{ label: 'About' }]}
       >
         <div className="flex items-center gap-2 text-sm text-sky-100">
@@ -74,7 +74,7 @@ export default function AboutPage() {
             </h2>
             <p className="mt-4 text-navy-500 sm:text-lg">
               A strong English certificate opens doors — to a university place, a scholarship, a job
-              abroad. But good preparation has been expensive and hard to find. We built SVY to
+              abroad. But good preparation has been expensive and hard to find. We built Savynt to
               change that: realistic, exam-style practice for IELTS, SAT and General English, with
               instant feedback and a clear path to your target — at a price that makes sense in
               Uzbekistan.
@@ -99,7 +99,7 @@ export default function AboutPage() {
         <section className="pb-4">
           <SectionHeading
             eyebrow="What we stand for"
-            title="The principles behind SVY"
+            title="The principles behind Savynt"
             subtitle="Every decision we make comes back to these four ideas."
           />
 

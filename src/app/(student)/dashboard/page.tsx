@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import {
   TrendingUp,
   BookOpenCheck,
@@ -23,7 +23,7 @@ import { TaskRow } from '@/components/student/TaskRow'
 
 export const metadata: Metadata = {
   title: 'Dashboard',
-  description: 'Your SVY learning snapshot — progress, stats and what to practice next.',
+  description: 'Your Savynt learning snapshot — progress, stats and what to practice next.',
 }
 
 interface QuickLink {

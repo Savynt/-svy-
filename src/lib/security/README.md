@@ -1,4 +1,4 @@
-# SVY security helpers
+﻿# Savynt security helpers
 
 Two dependency-free helpers and how to wire them. **The orchestrator applies these
 — the auth route handlers and `next.config.ts` are not edited here.**

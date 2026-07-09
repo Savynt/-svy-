@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
   Users,
@@ -104,7 +104,7 @@ export default async function AdminOverviewPage() {
             Platform at a glance
           </h1>
           <p className="mt-2 max-w-xl text-navy-500">
-            A live snapshot of people, revenue and content across SVY.
+            A live snapshot of people, revenue and content across Savynt.
           </p>
         </div>
         {pendingTasks > 0 && (

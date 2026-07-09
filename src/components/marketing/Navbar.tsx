@@ -41,7 +41,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/30 bg-white/60 shadow-sm backdrop-blur-xl">
       <nav className="container-app flex h-16 items-center justify-between" aria-label="Main">
-        <Link href="/" className="flex items-center rounded-lg" aria-label="SVY home">
+        <Link href="/" className="flex items-center rounded-lg" aria-label="Savynt home">
           <Logo size={48} />
         </Link>
 
