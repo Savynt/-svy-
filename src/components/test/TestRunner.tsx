@@ -132,10 +132,6 @@ export function TestRunner({ task }: { task: RunnerTask }) {
   const [showTranscript, setShowTranscript] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
-  // Instant per-question feedback for PRACTICE tasks.
-  const [instantResults, setInstantResults] = useState<Record<string, QuestionResult>>({})
-  const [lockedQuestions, setLockedQuestions] = useState<Set<string>>(new Set())
-
   const durationSec = task.durationMin * 60
   const [remaining, setRemaining] = useState(durationSec)
   // Wall-clock anchors, set on mount in an effect (no impure call during render).
@@ -151,39 +147,6 @@ export function TestRunner({ task }: { task: RunnerTask }) {
       return acc + (v.trim().length > 0 ? 1 : 0)
     }, 0)
   }, [answers, flatQuestions])
-
-  // Choice types that trigger instant feedback on selection.
-  const INSTANT_CHECK_TYPES = new Set<QuestionType>([
-    'MULTIPLE_CHOICE', 'TRUE_FALSE_NOTGIVEN', 'YES_NO_NOTGIVEN',
-    'MULTI_SELECT', 'MATCHING', 'MATCHING_HEADINGS',
-  ])
-
-  const checkPracticeAnswer = useCallback(async (questionId: string, response: AnswerValue, points: number) => {
-    try {
-      const res = await fetch('/api/attempts/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId, response }),
-      })
-      if (!res.ok) return
-      const data = await res.json() as { isCorrect: boolean | null; correctAnswer: string | string[] | null; explanation: string | null }
-      setInstantResults((prev) => ({
-        ...prev,
-        [questionId]: {
-          questionId,
-          isCorrect: data.isCorrect,
-          pointsAwarded: data.isCorrect ? points : 0,
-          points,
-          correctAnswer: data.correctAnswer,
-          explanation: data.explanation,
-          needsGrading: false,
-        },
-      }))
-      setLockedQuestions((prev) => new Set([...prev, questionId]))
-    } catch {
-      // silent — instant check is best-effort
-    }
-  }, [])
 
   const setAnswer = useCallback((questionId: string, value: AnswerValue) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }))

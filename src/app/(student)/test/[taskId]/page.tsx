@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth/session'
+import { sanitizeHtml } from '@/lib/sanitize'
 import { TestRunner, type RunnerTask } from '@/components/test/TestRunner'
 import type { Prisma } from '@prisma/client'
 
@@ -117,7 +118,7 @@ export default async function TestPage({
     cefrLevel: task.cefrLevel,
     durationMin: task.durationMin,
     instructions: task.instructions,
-    passageHtml: task.passageHtml,
+    passageHtml: task.passageHtml ? sanitizeHtml(task.passageHtml) : null,
     audioUrl: task.audioUrl,
     transcript: task.transcript,
     groups: [...groups, ...ungrouped].sort((a, b) => a.order - b.order),
