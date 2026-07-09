@@ -69,6 +69,30 @@ function firstNameOf(user: { firstName: string | null; name: string | null; emai
   return user.email.split('@')[0]
 }
 
+/**
+ * Consecutive-day streak from test submission timestamps (UTC day boundaries).
+ * The streak is "live" only if the most recent activity was today or yesterday;
+ * an older last-activity means the streak has lapsed and we return 0.
+ */
+function computeDayStreak(dates: (Date | null)[]): number {
+  const dayKey = (d: Date) => Math.floor(d.getTime() / 86_400_000) // days since epoch (UTC)
+  const days = new Set<number>()
+  for (const d of dates) if (d) days.add(dayKey(d))
+  if (days.size === 0) return 0
+
+  const today = dayKey(new Date())
+  // Anchor to today if active today, otherwise yesterday; else the streak lapsed.
+  let cursor = days.has(today) ? today : days.has(today - 1) ? today - 1 : null
+  if (cursor === null) return 0
+
+  let streak = 0
+  while (days.has(cursor)) {
+    streak += 1
+    cursor -= 1
+  }
+  return streak
+}
+
 export default async function DashboardPage() {
   // Auth gate — also opts the route into dynamic rendering (reads cookies).
   await requireUser()
@@ -97,7 +121,7 @@ export default async function DashboardPage() {
   }
 
   // Fetch everything the dashboard needs in parallel.
-  const [subscription, gradedCount, scoreAgg, skillsTracked, inProgress, recommendedTasks] =
+  const [subscription, gradedCount, scoreAgg, submissionDates, inProgress, recommendedTasks] =
     await Promise.all([
       prisma.subscription.findFirst({
         where: { userId: user.id, status: { in: [...ACTIVE_STATUSES] } },
@@ -109,7 +133,12 @@ export default async function DashboardPage() {
         where: { userId: user.id, status: 'GRADED', score: { not: null }, totalPoints: { gt: 0 } },
         _sum: { score: true, totalPoints: true },
       }),
-      prisma.skillProgress.count({ where: { userId: user.id } }),
+      prisma.attempt.findMany({
+        where: { userId: user.id, submittedAt: { not: null } },
+        select: { submittedAt: true },
+        orderBy: { submittedAt: 'desc' },
+        take: 400,
+      }),
       prisma.attempt.findMany({
         where: { userId: user.id, status: 'IN_PROGRESS', task: { status: 'PUBLISHED' } },
         orderBy: { startedAt: 'desc' },
@@ -157,6 +186,7 @@ export default async function DashboardPage() {
   const totalPoints = scoreAgg._sum.totalPoints ?? 0
   const avgScorePct = totalPoints > 0 ? Math.round((totalScore / totalPoints) * 100) : null
   const planName = subscription?.plan.name ?? null
+  const dayStreak = computeDayStreak(submissionDates.map((a) => a.submittedAt))
 
   const stats = [
     {
@@ -173,8 +203,8 @@ export default async function DashboardPage() {
     },
     {
       label: 'Day streak',
-      value: '0',
-      hint: 'Practice today to begin',
+      value: dayStreak.toLocaleString('en-US'),
+      hint: dayStreak === 0 ? 'Practice today to begin' : dayStreak === 1 ? 'Keep it going tomorrow' : 'Days in a row',
       icon: Flame,
     },
   ]
