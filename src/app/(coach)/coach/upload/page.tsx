@@ -12,9 +12,8 @@ import {
   Loader2,
   RotateCcw,
   Send,
-  Info,
 } from 'lucide-react'
-import type { NormalizedTask, NormalizedQuestion } from '@/types/task'
+import type { NormalizedTask } from '@/types/task'
 import { cn } from '@/lib/cn'
 import { Card, CardBody } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -27,8 +26,6 @@ type Stage = 'idle' | 'preview' | 'submitted'
 interface PreviewData {
   task: NormalizedTask
   warnings: string[]
-  /** true when the server importer answered, false when we fell back to a local mock */
-  fromServer: boolean
 }
 
 const QUESTION_TYPE_LABEL: Record<string, string> = {
@@ -50,112 +47,6 @@ const QUESTION_TYPE_LABEL: Record<string, string> = {
 
 function prettyType(type: string): string {
   return QUESTION_TYPE_LABEL[type] ?? type
-}
-
-/**
- * Local, deterministic mock used when the `/api/tasks/import` route is not
- * available yet. It produces a believable preview from the pasted HTML so the
- * coach can see the flow end-to-end. The real importer (node-html-parser) will
- * replace this with parsed output once the API route ships.
- */
-function buildMockPreview(html: string, source: string): PreviewData {
-  const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-  const lower = `${source} ${html}`.toLowerCase()
-
-  const track: NormalizedTask['track'] = lower.includes('sat')
-    ? 'SAT'
-    : lower.includes('general english') || lower.includes('general_english')
-      ? 'GENERAL_ENGLISH'
-      : 'IELTS'
-
-  const skill: NormalizedTask['skill'] = lower.includes('listening')
-    ? 'LISTENING'
-    : lower.includes('writing')
-      ? 'WRITING'
-      : lower.includes('speaking')
-        ? 'SPEAKING'
-        : 'READING'
-
-  // Rough question detection: count blanks, option markers and numbered lines.
-  const blanks = (html.match(/_{2,}|\[\s*\]|\(\s*\)/g) ?? []).length
-  const numbered = (html.match(/(?:^|\n)\s*\d{1,2}[.)]/g) ?? []).length
-  const detected = Math.min(40, Math.max(blanks, numbered))
-
-  const isEssay = skill === 'WRITING'
-  const isSpeaking = skill === 'SPEAKING'
-
-  const questions: NormalizedQuestion[] = []
-  if (isEssay) {
-    questions.push({
-      order: 1,
-      type: 'ESSAY',
-      prompt:
-        text.slice(0, 180) ||
-        'Some people believe… To what extent do you agree or disagree?',
-      answer: '',
-      points: 1,
-    })
-  } else if (isSpeaking) {
-    questions.push({
-      order: 1,
-      type: 'SPEAKING_PROMPT',
-      prompt: text.slice(0, 180) || 'Describe a memorable journey you have taken.',
-      answer: '',
-      points: 1,
-    })
-  } else {
-    const count = Math.max(1, detected || 5)
-    for (let i = 0; i < count; i += 1) {
-      questions.push({
-        order: i + 1,
-        type: blanks >= numbered ? 'SENTENCE_COMPLETION' : 'MULTIPLE_CHOICE',
-        prompt: `Question ${i + 1}`,
-        answer: '',
-        points: 1,
-      })
-    }
-  }
-
-  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i) ?? html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
-  const title =
-    titleMatch?.[1]?.trim() ||
-    source.replace(/\.html?$/i, '').replace(/[-_]+/g, ' ').trim() ||
-    `${track} ${skill[0]}${skill.slice(1).toLowerCase()} practice`
-
-  const warnings: string[] = []
-  if (!titleMatch) warnings.push('No <title> or <h1> found — using the file name as the title.')
-  if (!isEssay && !isSpeaking && detected === 0)
-    warnings.push('Could not detect numbered questions — defaulted to a 5-question set.')
-
-  const task: NormalizedTask = {
-    slug: title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '')
-      .slice(0, 60) || 'untitled-test',
-    title,
-    track,
-    skill,
-    type: 'PRACTICE',
-    durationMin: isEssay ? 40 : isSpeaking ? 15 : 20,
-    topics: [],
-    source,
-    instructions: undefined,
-    groups: [
-      {
-        order: 1,
-        type: questions[0].type,
-        instruction: isEssay
-          ? 'Write at least 250 words.'
-          : isSpeaking
-            ? 'Speak for 1–2 minutes.'
-            : `Questions 1–${questions.length}`,
-        questions,
-      },
-    ],
-  }
-
-  return { task, warnings, fromServer: false }
 }
 
 export default function CoachUploadPage() {
@@ -216,24 +107,27 @@ export default function CoachUploadPage() {
         body: JSON.stringify({ html, filename: fileName }),
       })
 
-      if (res.ok) {
-        const data = (await res.json()) as {
-          task?: NormalizedTask
-          warnings?: string[]
-        }
-        if (data.task) {
-          setPreview({ task: data.task, warnings: data.warnings ?? [], fromServer: true })
-          setStage('preview')
-          return
-        }
+      const data = (await res.json()) as {
+        task?: NormalizedTask
+        warnings?: string[]
+        errors?: string[]
+        error?: string
       }
-      // Route missing or returned no task → graceful local preview.
-      setPreview(buildMockPreview(html, fileName))
+
+      if (!res.ok || !data.task) {
+        setError(
+          data.error ||
+            (data.errors && data.errors.length > 0
+              ? data.errors.join(' · ')
+              : 'Could not parse this file into a test. Check the HTML and try again.'),
+        )
+        return
+      }
+
+      setPreview({ task: data.task, warnings: data.warnings ?? [] })
       setStage('preview')
     } catch {
-      // Network/route error → still show a usable preview.
-      setPreview(buildMockPreview(html, fileName))
-      setStage('preview')
+      setError('Network error — could not reach the import service. Please try again.')
     } finally {
       setBusy(false)
     }
@@ -252,10 +146,21 @@ export default function CoachUploadPage() {
           filename: preview.task.source ?? source,
         }),
       })
-      // Whether or not the route exists yet, surface the "submitted for review"
-      // confirmation — the moderation contract is what we're demonstrating.
-      if (!res.ok && res.status >= 500) {
-        throw new Error('The import service is unavailable. Please try again shortly.')
+
+      const data = (await res.json()) as {
+        saved?: { taskId: string }
+        error?: string
+        errors?: string[]
+      }
+
+      // Only claim success when the server actually persisted the task.
+      if (!res.ok || !data.saved) {
+        throw new Error(
+          data.error ||
+            (data.errors && data.errors.length > 0
+              ? data.errors.join(' · ')
+              : 'Could not save the test. Please try again.'),
+        )
       }
       setStage('submitted')
     } catch (err) {
@@ -478,16 +383,6 @@ export default function CoachUploadPage() {
                   </div>
                 ) : (
                   <div className="space-y-5">
-                    {!preview.fromServer && (
-                      <div className="flex items-start gap-2 rounded-xl bg-sky-100 px-3 py-2.5 text-xs text-navy-600">
-                        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                        <span>
-                          Preview generated locally — the import service will refine this once
-                          connected.
-                        </span>
-                      </div>
-                    )}
-
                     <div>
                       <h3 className="font-display text-lg font-bold text-navy-800">{task.title}</h3>
                       <div className="mt-2 flex flex-wrap gap-2">
