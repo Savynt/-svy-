@@ -762,6 +762,149 @@ const EXAMS: BuilderTask[] = [
       ]) },
     ],
   },
+  {
+    title: 'IELTS Speaking — Test 23',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Spare time', 'Music events'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Spare time.', questions: prompts([
+        'What free time activities are popular with people in your country?',
+        'What do you do when you have free time?',
+        'Who do you usually spend your spare time with?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a music event that you didn’t enjoy. You should say: what it was; who you went with; why you went there; and why you didn’t like it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Music events.', questions: prompts([
+        'What kind of music events do people like today?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 24',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Crowded places', 'Encouraging others'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Crowded places.', questions: prompts([
+        'Do most people like crowded places?',
+        'Do you like crowded places?',
+        'When was the last time you were in a crowded place?',
+        'Is the city where you live crowded?',
+        'Is there a crowded place near where you live?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a time when you encouraged someone to do something that they didn’t want to do. You should say: who this person is; what you encouraged them to do; how this person reacted; and why you encouraged this person to do it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Encouraging others.', questions: prompts([
+        'Is the role of a leader important in a group?',
+        'How can leaders encourage employees?',
+        'When should parents encourage their children?',
+        'Do you think some people are better than others at persuading?',
+        'What kind of encouragement should parents give?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 25',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Teachers', 'Learning new things'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Teachers.', questions: prompts([
+        'Would you like to be a teacher?',
+        'Do you think you could be a teacher?',
+        'Do you have a favourite teacher?',
+        'How does this teacher help you?',
+        'How has your favourite teacher helped you?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe one of your friends who learned something new (not from a teacher). You should say: who this person is; what this person learned; why they learned it; and whether it would be easier to learn from a teacher.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Learning new things.', questions: prompts([
+        'Do you think learning many subjects at one time is better or learning one subject is better?',
+        'Do you think learning many subjects is beneficial to your work?',
+        'Do you think all teachers should have entertaining teaching styles?',
+        'Should teachers make lessons fun?',
+        'Is it important for people to learn new skills all life long?',
+        'Do you think enterprises should provide training for their employees?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 26',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Social media', 'Making plans'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Social media.', questions: prompts([
+        'Do you think you spend too much time on social media?',
+        'What do people often do on social media?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a person who makes plans a lot and is good at planning. You should say: who this person is; how you knew this person; what plans this person makes; and how you feel about this person.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Making plans.', questions: prompts([
+        'In general, do you think planning is important?',
+        'Do you think everyone in your country makes everyday plans?',
+        'Do you think children should plan their future careers?',
+        'Should children ask their teachers or parents for advice when making plans?',
+        'What activities do we need to plan ahead?',
+        'Is making study plans popular among young people?',
+        'Do you think choosing a college major is closely related to a person’s future career?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 27',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Dreams and ambitions', 'Drawing, museums'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Dreams and ambitions.', questions: prompts([
+        'What was your dream when you were a child?',
+        'Are you the kind of person who sticks to dreams?',
+        'Do you think you are an ambitious person?',
+        'Are you an ambitious person?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a child who loves drawing or painting. You should say: who this child is; how you knew him or her; how often he or she draws or paints; and why he or she likes drawing or painting.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Drawing & museums.', questions: prompts([
+        'What is the right age for a child to learn drawing?',
+        'Why do most children draw more often than adults do?',
+        'Why do some people visit galleries or museums instead of viewing artworks online?',
+        'Do you think galleries and museums should be free of charge?',
+        'How do artworks inspire people?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 28',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Mirrors', 'Quiet places'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Mirrors.', questions: prompts([
+        'Would you use mirrors to decorate your room?',
+        'Do you usually take a mirror with you?',
+        'How often do you use a mirror?',
+        'Do you like looking at yourself in a mirror?',
+        'Have you ever bought a mirror?',
+        'Do you use a mirror before buying clothing?',
+        'What functions does a mirror have?',
+        'Do you think a mirror is a good decoration?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a quiet place that you like to go to. You should say: what place it is; how often you go there and when you go there; what you do there; and why you like this place.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Quiet places.', questions: prompts([
+        'Is it hard to find quiet places in cities?',
+        'Can people bring children to these noise-free places?',
+        'What places should be noise-free?',
+        'Are there many quiet places in your city?',
+        'Why do people sometimes prefer to be alone?',
+        'Why do people go to quiet places?',
+        'Is there any place that is absolutely quiet?',
+        'Why is it difficult to stay in a quiet place?',
+      ]) },
+    ],
+  },
 ]
 
 async function main() {
