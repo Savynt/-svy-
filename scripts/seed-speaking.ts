@@ -31,8 +31,9 @@
  * NOTE: every source post is plain text — IELTS Speaking has no images by format
  * (Part 2 is a printed cue card). `imageUrl` stays unset here; it is optional.
  *
- * PROGRESS: Tests 1–10 done (Part1 3756‑3766 / Part2 3834‑3853).
- * NEXT: Test 11 → Part1 3767, Part2 3855, Part3 3856.
+ * PROGRESS: Tests 1–16 done (Part1 3756‑3772 / Part2 3834‑3865).
+ * NEXT: Test 17 → Part1 3773, Part2 3867, Part3 3868. Target: 50 exams
+ * (note: channel has only 48 Part 1 topics, so 49–50 need an alt Part 1 source).
  */
 
 import { prisma } from '@/lib/prisma'
@@ -485,6 +486,142 @@ const EXAMS: BuilderTask[] = [
           'What are the differences between old and young people when using apps?',
         ]),
       },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 11',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Buildings', 'Working abroad, travelling'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Buildings.', questions: prompts([
+        'Do you take photos of buildings?',
+        'Is there a building that you would like to visit?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a country in which you would like to work or live for a short period of time. You should say: what country or city it is; how you know about it; what type of work you would like to do there; and why you would like to work in this country.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Working abroad & travelling.', questions: prompts([
+        'Why do people like travelling?',
+        'What jobs can people do abroad for a short period of time?',
+        'Is it good that now people have an opportunity to work abroad?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 12',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Views', 'Old things, museums'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Views.', questions: prompts([
+        'Do you like taking pictures of different views?',
+        'Do you prefer views in urban areas or rural areas?',
+        'Do you prefer views in your own country or in other countries?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe an important old thing that your family has kept for a long time. You should say: what it is; how your family first got this thing; how long your family has kept it; and why this thing is important to your family.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Old things & museums.', questions: prompts([
+        'What are the differences between the things that people keep today and the things that people kept in the past?',
+        'As well as family photographs, what are some other things that people keep in their family for a long time?',
+        'In your culture, what sorts of things do people pass down from generation to generation?',
+        'What kinds of things are kept in museums?',
+        'What’s the influence of technology on museums?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 13',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Scenery', 'Transportation, air pollution'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Scenery.', questions: prompts([
+        'Do you like to take pictures of good scenery?',
+        'Do you look out the window at the scenery when travelling by bus or car?',
+        'Do you prefer the mountains or the sea?',
+        'What are the most beautiful sights you have seen while travelling?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a long bike, motorbike, or car trip that you would like to take. You should say: when you want to go; where you want to go; how long it will take you; and why it is interesting.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Transportation & air pollution.', questions: prompts([
+        'How are transportation systems in rural and urban areas different?',
+        'Which mode of transport is more popular in your country, a bicycle or car?',
+        'Do you think air pollution comes mostly from mobile vehicles?',
+        'Do you think people need to change the way of transportation drastically to protect the environment?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 14',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Childhood activities', 'Shopping'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Childhood activities.', questions: prompts([
+        'What did you enjoy doing as a child?',
+        'Did you enjoy your childhood?',
+        'Did you prefer to do activities alone or with a group of people when you were a child?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a shop you often visit. You should say: what shop it is and where it is; what it sells; and why you like it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Shopping.', questions: prompts([
+        'Do you think that people buy a lot of things that they don’t need?',
+        'Do you often buy more than you expected?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 15',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Stages in life', 'Imagination'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Stages in life.', questions: prompts([
+        'How do people remember each stage of their lives?',
+        'At what age do you think people are the happiest?',
+        'Do you enjoy being the age you are now?',
+        'What did you often do with your friends in your childhood?',
+        'Do you have any plans for the next five years?',
+        'What do you think is the most important thing at the moment?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a time you needed to use your imagination. You should say: what you did using imagination; when it was; whether it was easy or difficult; and how you felt.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Imagination.', questions: prompts([
+        'What kind of jobs require imagination?',
+        'Do scientists need imagination in their work?',
+        'Do you think adults can have lots of imagination?',
+        'What subjects are helpful for children’s imagination?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 16',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Daily routine', 'Films'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Daily routine.', questions: prompts([
+        'How do you organise your study time?',
+        'What is your daily study routine?',
+        'Do you ever change your plans?',
+        'Have you ever changed your routine?',
+        'What’s your favourite time of the day?',
+        'Do you go to sleep early or stay up late?',
+        'Do you often stay up late?',
+        'Do you think it’s important to have a daily routine for your study?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a film you watched and enjoyed. You should say: what the film was about; when and where you watched it; and why you liked it and why you want to watch it again.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Films.', questions: prompts([
+        'What makes a movie a blockbuster?',
+        'Are actors and actresses important to movies?',
+        'Do you think films with famous actors or actresses are more likely to become successful films?',
+        'What kinds of movies are successful in your country?',
+        'Do people in your country still like to go to a cinema?',
+        'Where do people watch movies?',
+        'Do people in your country prefer to watch domestic movies or foreign movies?',
+        'Do you think only well-known directors can create the best movies?',
+      ]) },
     ],
   },
 ]
