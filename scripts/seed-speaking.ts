@@ -624,6 +624,144 @@ const EXAMS: BuilderTask[] = [
       ]) },
     ],
   },
+  {
+    title: 'IELTS Speaking — Test 17',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Animals and pets', 'Stories'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Animals and pets.', questions: prompts([
+        'What’s your favourite animal?',
+        'Have you ever had a pet?',
+        'What’s the most popular animal in your country?',
+        'Where do you prefer to keep your pet, indoors or outdoors?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a story you read recently. You should say: what it is about; when you read it; whether you liked it; and what you learned from it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Stories.', questions: prompts([
+        'Why do most children like listening to stories before bedtime?',
+        'Is a good storyline important for a movie?',
+        'Why do children like hearing the same bedtime story?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 18',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Days off', 'Intelligence'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Days off.', questions: prompts([
+        'When was the last time you had a few days off?',
+        'What do you do when you have days off?',
+        'What would you like to do if you had a day off tomorrow?',
+        'Do you usually spend your days off with your parents or with your friends?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a person who solved a problem in a smart way. You should say: who this person is; what the problem was; what solution they gave; and why you think it was a clever solution.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Intelligence.', questions: prompts([
+        'Are people born clever or need to learn to be clever?',
+        'Why are some children more intelligent than others?',
+        'Do you think society needs people with different types of intelligence?',
+        'Does modern society need talents of all kinds?',
+        'How do children become smart at school?',
+        'Why are some people well-rounded and others only good at one thing?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 19',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Food', 'Environmental protection'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Food.', questions: prompts([
+        'What kinds of food do you particularly like?',
+        'What kinds of food are most popular in your country?',
+        'Is there any food you don’t like?',
+        'What kind of food did you like when you were young?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a person who encouraged you to protect the nature. You should say: who this person is; how this person encouraged you; what this person encouraged you to do; and how you feel about this person.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Environmental protection.', questions: prompts([
+        'How can parents teach their children to protect nature?',
+        'Should schools teach children to get close to nature?',
+        'Do you think there should be laws to protect nature?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 20',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Keys', 'Spending and saving money'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Keys.', questions: prompts([
+        'Have you ever locked yourself out?',
+        'Do you think it’s a good idea to leave your keys with a neighbour?',
+        'Have you ever lost your keys?',
+        'Do you always bring a lot of keys with you?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe an occasion when you paid more than expected. You should say: what you bought; how much you paid; why you bought it; and why you paid more.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Spending and saving money.', questions: prompts([
+        'What do young people spend money on?',
+        'Is it good and necessary to teach children to save money?',
+        'Do you think it is important to save money?',
+        'Do you think that people buy a lot of things that they don’t need?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 21',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Dreams', 'Helping others'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Dreams.', questions: prompts([
+        'Do you remember your dreams when you wake up?',
+        'Do you think dreams will affect life?',
+        'Do you think dreams have special meanings?',
+        'Do you like hearing other people’s dreams?',
+        'Do you share your dreams with others?',
+        'Do you want to make your dreams come true?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a person who often helps others. You should say: who this person is; how you know this person; how this person helps you; and why you think this person is helpful.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Helping others.', questions: prompts([
+        'What can children help parents with?',
+        'In your view, should children be taught to help others?',
+        'Should children help their parents with household chores?',
+        'What kind of help do people need when looking for a new job?',
+        'Who should people ask for help, colleagues or family members?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 22',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Memory', 'Technology and communication'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Memory.', questions: prompts([
+        'How do you remember important things?',
+        'Are you good at memorising things?',
+        'Have you ever forgotten something important?',
+        'What do you need to remember in your daily life?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a piece of technology (not a phone) that you would like to own. You should say: what it is; how you knew it; how much it costs; and why you’d like to own it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Technology & communication.', questions: prompts([
+        'What are the differences between talking with friends online and face-to-face?',
+        'What technology do people currently use?',
+        'Does technological development have a negative impact on communication among people?',
+        'Do you think technology unites or separates people?',
+        'What effects does technology have on people’s relationships?',
+        'What are the differences between the technology of the past and that of today?',
+        'What are the differences between making friends in real life and online?',
+      ]) },
+    ],
+  },
 ]
 
 async function main() {
