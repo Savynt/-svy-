@@ -28,8 +28,11 @@
  *   3933 3935 3937 3939 3941 3943 3945 3947 3949 3951 3953 3955 3957 3959 3961 3963
  *   3965 3967
  *
- * PROGRESS: Tests 1–7 done (Part1 3756‑3763 / Part2 3834‑3847).
- * NEXT: Test 8 → Part1 3764, Part2 3849, Part3 3850.
+ * NOTE: every source post is plain text — IELTS Speaking has no images by format
+ * (Part 2 is a printed cue card). `imageUrl` stays unset here; it is optional.
+ *
+ * PROGRESS: Tests 1–10 done (Part1 3756‑3766 / Part2 3834‑3853).
+ * NEXT: Test 11 → Part1 3767, Part2 3855, Part3 3856.
  */
 
 import { prisma } from '@/lib/prisma'
@@ -363,6 +366,123 @@ const EXAMS: BuilderTask[] = [
           'What makes people buy new things?',
           'Why do all children like toys?',
           'Do you think it’s good for a child to take his or her favourite toy with them all the time?',
+        ]),
+      },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 8',
+    track: 'IELTS',
+    skill: 'SPEAKING',
+    type: 'PRACTICE',
+    durationMin: 14,
+    topics: ['Sports teams', 'Smiling'],
+    publish: true,
+    groups: [
+      {
+        type: 'SPEAKING_PROMPT',
+        instruction: PART1_INSTRUCTION + ' Topic: Sports teams.',
+        questions: prompts([
+          'Have you ever been part of a sports team?',
+          'Are team sports popular in your culture?',
+          'Do you like watching team games?',
+          'What are the differences between team sports and individual sports?',
+        ]),
+      },
+      {
+        type: 'SPEAKING_PROMPT',
+        instruction: PART2_INSTRUCTION,
+        questions: prompts([
+          'Describe an occasion when you saw a lot of people smiling. You should say: what occasion it was; where it was; and why they were smiling.',
+        ]),
+      },
+      {
+        type: 'SPEAKING_PROMPT',
+        instruction: PART3_INSTRUCTION + ' Topic: Smiling.',
+        questions: prompts([
+          'Do you think people who like to smile are more friendly?',
+          'Why do most people smile in photographs?',
+          'Do women smile more than men? Why?',
+          'Do people smile more when they are younger or older?',
+        ]),
+      },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 9',
+    track: 'IELTS',
+    skill: 'SPEAKING',
+    type: 'PRACTICE',
+    durationMin: 14,
+    topics: ['Typing', 'Advice'],
+    publish: true,
+    groups: [
+      {
+        type: 'SPEAKING_PROMPT',
+        instruction: PART1_INSTRUCTION + ' Topic: Typing.',
+        questions: prompts([
+          'Do you type on a desktop or laptop keyboard every day?',
+          'When did you learn how to type on a keyboard?',
+          'How do you improve your typing?',
+        ]),
+      },
+      {
+        type: 'SPEAKING_PROMPT',
+        instruction: PART2_INSTRUCTION,
+        questions: prompts([
+          'Describe a time when you gave advice to others. You should say: who you gave advice to; what the situation was; what advice you gave; and what the result was.',
+        ]),
+      },
+      {
+        type: 'SPEAKING_PROMPT',
+        instruction: PART3_INSTRUCTION + ' Topic: Advice.',
+        questions: prompts([
+          'What problems can people face if they ask many different people for advice?',
+          'Why do some people like to ask others for advice on almost everything?',
+          'In general, what kind of person is most suitable for giving advice to others?',
+          'Should people prepare before giving advice?',
+          'Is it good to ask advice from strangers online?',
+          'What are the personalities of people whose job is to give advice to others?',
+        ]),
+      },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 10',
+    track: 'IELTS',
+    skill: 'SPEAKING',
+    type: 'PRACTICE',
+    durationMin: 14,
+    topics: ['Walking', 'Apps and programs'],
+    publish: true,
+    groups: [
+      {
+        type: 'SPEAKING_PROMPT',
+        instruction: PART1_INSTRUCTION + ' Topic: Walking.',
+        questions: prompts([
+          'Do you walk a lot?',
+          'Did you often go outside to have a walk when you were a child?',
+          'Why do people like to walk in parks?',
+          'Where would you like to take a long walk if you had the chance?',
+          'Where have you gone for a walk lately?',
+        ]),
+      },
+      {
+        type: 'SPEAKING_PROMPT',
+        instruction: PART2_INSTRUCTION,
+        questions: prompts([
+          'Describe an app or program on your computer or phone. You should say: what app or program it is; when and where you found it; how you use it; and how you feel about it.',
+        ]),
+      },
+      {
+        type: 'SPEAKING_PROMPT',
+        instruction: PART3_INSTRUCTION + ' Topic: Apps and programs.',
+        questions: prompts([
+          'What are the drawbacks of having too many apps?',
+          'Why do some people not like using apps?',
+          'What are the most and the least popular apps in your country?',
+          'What kind of apps do you have on your phone?',
+          'What are the differences between old and young people when using apps?',
         ]),
       },
     ],
