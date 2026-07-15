@@ -39,7 +39,9 @@ export interface SecurityHeader {
  *    add a nonce to style-src — mixing a nonce with `'unsafe-inline'` makes
  *    browsers ignore `'unsafe-inline'` and would break those inline styles.
  *  - `img-src` allows `data:`/`blob:` for the inline logo/uploaded previews and
- *    `https://i.imgur.com` for coach-authored task images.
+ *    the image hosts coaches paste task graphics from: Imgur (`i.imgur.com`),
+ *    ImgBB (`i.ibb.co`) and Postimages (`i.postimg.cc`). Add a host here before
+ *    coaches use it, or the browser blocks the image.
  *  - `connect-src 'self'`: same-origin API route handlers only.
  *  - `frame-ancestors 'none'` is the modern twin of X-Frame-Options;
  *    `upgrade-insecure-requests` forces https on any stray http subresource.
@@ -50,7 +52,7 @@ export function buildCspHeaderValue(nonce: string, isDev = process.env.NODE_ENV 
     "base-uri 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ''}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://i.imgur.com",
+    "img-src 'self' data: blob: https://i.imgur.com https://i.ibb.co https://i.postimg.cc",
     "font-src 'self' data:",
     "connect-src 'self'",
     "form-action 'self'",
