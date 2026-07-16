@@ -12,6 +12,8 @@ import {
   CircleDashed,
   ChevronLeft,
   Award,
+  Maximize2,
+  Minimize2,
 } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/Button'
@@ -131,6 +133,8 @@ export function TestRunner({ task }: { task: RunnerTask }) {
   const [error, setError] = useState<string | null>(null)
   const [showTranscript, setShowTranscript] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  /** SAT Math: the calculator is cramped at its inline size — let students blow it up. */
+  const [desmosFullscreen, setDesmosFullscreen] = useState(false)
 
   const durationSec = task.durationMin * 60
   const [remaining, setRemaining] = useState(durationSec)
@@ -196,6 +200,17 @@ export function TestRunner({ task }: { task: RunnerTask }) {
     // durationSec is derived from a stable prop; intentionally mount-only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Esc leaves the fullscreen calculator. Listener only exists while expanded so
+  // it can never swallow Esc from anything else on the page.
+  useEffect(() => {
+    if (!desmosFullscreen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDesmosFullscreen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [desmosFullscreen])
 
   // Countdown timer — ticks from the wall-clock deadline, auto-submits at zero.
   useEffect(() => {
@@ -291,16 +306,42 @@ export function TestRunner({ task }: { task: RunnerTask }) {
         )}
 
         {hasDesmos && (
-          <Card className="mb-6">
-            <CardBody>
-              <p className="mb-2 text-xs font-semibold text-navy-600">Desmos Graphing Calculator</p>
-              <iframe
-                src="https://www.desmos.com/calculator"
-                className="h-72 w-full rounded-lg border border-navy-200"
-                title="Desmos Graphing Calculator"
-              />
-            </CardBody>
-          </Card>
+          // Wrapper + classes only — the iframe element itself is never moved or
+          // re-created when toggling, so Desmos keeps whatever the student typed.
+          <div className={cn(desmosFullscreen ? 'fixed inset-0 z-50 bg-navy-50 p-3 sm:p-4' : 'mb-6')}>
+            <Card className={desmosFullscreen ? 'h-full' : undefined}>
+              <CardBody>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold text-navy-600">Desmos Graphing Calculator</p>
+                  <button
+                    type="button"
+                    onClick={() => setDesmosFullscreen((v) => !v)}
+                    aria-pressed={desmosFullscreen}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-navy-200 bg-white px-2.5 py-1 text-xs font-medium text-navy-600 transition hover:bg-navy-50 hover:text-navy-900"
+                  >
+                    {desmosFullscreen ? (
+                      <>
+                        <Minimize2 className="h-3.5 w-3.5" /> Exit fullscreen
+                        <span className="ml-1 hidden text-navy-300 sm:inline">Esc</span>
+                      </>
+                    ) : (
+                      <>
+                        <Maximize2 className="h-3.5 w-3.5" /> Fullscreen
+                      </>
+                    )}
+                  </button>
+                </div>
+                <iframe
+                  src="https://www.desmos.com/calculator"
+                  className={cn(
+                    'w-full rounded-lg border border-navy-200',
+                    desmosFullscreen ? 'h-[calc(100vh-7.5rem)]' : 'h-72',
+                  )}
+                  title="Desmos Graphing Calculator"
+                />
+              </CardBody>
+            </Card>
+          </div>
         )}
 
         <div
