@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth/session'
+import { can } from '@/lib/rbac'
 import { sanitizeHtml } from '@/lib/sanitize'
 import { TestRunner, type RunnerTask } from '@/components/test/TestRunner'
 import type { Prisma } from '@prisma/client'
@@ -45,11 +46,16 @@ export default async function TestPage({
     redirect(`/login?next=/test/${taskId}`)
   }
 
+  // Students only ever open published tasks. Moderators must be able to preview
+  // a pending/draft submission — otherwise the only way to judge a coach's task
+  // before approving it is to publish it to students first and look afterwards.
+  const canPreviewUnpublished = can(session.role, 'task:moderate')
+
   const task = await prisma.task.findFirst({
     // taskId may arrive as the cuid id or the human slug.
     where: {
       OR: [{ id: taskId }, { slug: taskId }],
-      status: 'PUBLISHED',
+      ...(canPreviewUnpublished ? {} : { status: 'PUBLISHED' }),
     },
     include: {
       groups: {
@@ -122,6 +128,24 @@ export default async function TestPage({
     audioUrl: task.audioUrl,
     transcript: task.transcript,
     groups: [...groups, ...ungrouped].sort((a, b) => a.order - b.order),
+  }
+
+  // Make it obvious this isn't live content — a moderator opening a pending task
+  // should never mistake it for what students actually see.
+  if (task.status !== 'PUBLISHED') {
+    return (
+      <>
+        <div className="border-b border-amber-300 bg-amber-50 px-4 py-2.5 text-center text-sm text-amber-900">
+          <strong>Preview — {task.status.toLowerCase().replace('_', ' ')}.</strong>{' '}
+          Students cannot see this task yet. Publish it from{' '}
+          <a href="/admin/content?status=pending" className="underline underline-offset-2">
+            Content
+          </a>
+          .
+        </div>
+        <TestRunner task={runnerTask} />
+      </>
+    )
   }
 
   return <TestRunner task={runnerTask} />
