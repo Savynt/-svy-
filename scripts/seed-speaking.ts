@@ -31,9 +31,11 @@
  * NOTE: every source post is plain text — IELTS Speaking has no images by format
  * (Part 2 is a printed cue card). `imageUrl` stays unset here; it is optional.
  *
- * PROGRESS: Tests 1–16 done (Part1 3756‑3772 / Part2 3834‑3865).
- * NEXT: Test 17 → Part1 3773, Part2 3867, Part3 3868. Target: 50 exams
- * (note: channel has only 48 Part 1 topics, so 49–50 need an alt Part 1 source).
+ * STATUS: all 50 exams seeded (Part1 3756‑3806 = topics 1‑48, Part2 3834‑3935).
+ * The channel publishes only 48 Part 1 topics (Topic‑49 is still "Soon..."), so
+ * Tests 49‑50 reuse the two openers a real examiner almost always asks — see the
+ * comment above Test 49. To extend past 50: Part 2 ids run to 3967 (topic 66);
+ * add a Part 1 topic as the channel releases them.
  */
 
 import { prisma } from '@/lib/prisma'
@@ -1310,6 +1312,116 @@ const EXAMS: BuilderTask[] = [
         'What kind of houses or apartments do people prefer to buy?',
         'What is the difference between living in the countryside and the city?',
         'Do you prefer to live in the city or in the countryside?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 47',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Films', 'Rivers and lakes'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Films.', questions: prompts([
+        'What kinds of movies do you like best?',
+        'How often do you go to a cinema to watch a movie?',
+        'Did you usually go to the cinema when you were a kid?',
+        'What was the first film that you watched?',
+        'Do you like to watch movies alone or with your friends?',
+        'Do you like to go to the cinema with your friends?',
+        'Do you prefer foreign films or films made in your country?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe an important river or lake in your country. You should say: what river it is; what you know about it; and why it is important.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Rivers and lakes.', questions: prompts([
+        'Why are rivers and lakes important to local people?',
+        'How can rivers and lakes benefit local people?',
+        'What water sports are popular in your country?',
+        'Why do people like water sports?',
+        'Do you think having a river or lake has an impact on tourism in the city?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 48',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Sports programs', 'Learning languages'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Sports programs.', questions: prompts([
+        'Do you like watching sports programs on TV?',
+        'Who do you like to watch live sports games with?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a thing you did to learn a language. You should say: what language you learned; what you did; how it helped you; and how you felt about it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Learning languages.', questions: prompts([
+        'What are the difficulties of learning a new language?',
+        'What difficulties do people face when learning a language?',
+        'Why do people learn foreign languages?',
+        'Do you think learning a foreign language is important?',
+        'What can people do to learn a foreign language?',
+        'What’s the best way to learn a language?',
+      ]) },
+    ],
+  },
+  // Tests 49–50: the channel publishes only 48 Part 1 topics (Topic-49 is still
+  // marked "Soon..."), while Part 2/3 exist up to topic 66. Part 2 and Part 3
+  // below are the channel's genuine topics 49/50; Part 1 reuses the two topics a
+  // real examiner opens with almost every time (Work & Studies, Hometown), so the
+  // exam stays complete and authentic rather than shipping without a Part 1.
+  {
+    title: 'IELTS Speaking — Test 49',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Work and Studies', 'Rules and punishment'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Work and Studies.', questions: prompts([
+        'Do you work or are you a student?',
+        'What work do you do? / What subjects are you studying?',
+        'Why did you choose that job?',
+        'Why did you choose to study that subject?',
+        'Do you like your job?',
+        'Is there anything you dislike about your job?',
+        'What do you like about your studies?',
+        'What do you dislike about your studies?',
+        'What was your dream job when you were young?',
+        'Have you changed your mind on your dream job?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a law on environmental protection. You should say: what the law is; how you first learned about it; who benefits from this law; and how you feel about it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Rules and punishment.', questions: prompts([
+        'What can teachers do to make students obey rules?',
+        'What are some rules that exist in schools or workplaces in your country?',
+        'What should parents do to educate children about laws?',
+        'When people break rules, how are they punished in your country?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 50',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Hometown', 'Leisure time'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Hometown & the area you live in.', questions: prompts([
+        'Please describe your hometown a little.',
+        'What is your town well-known for?',
+        'Do you like your hometown?',
+        'Is that a big city or a small place?',
+        'How long have you been living there?',
+        'Do you think you will continue living there for a long time?',
+        'Would you like to live in the countryside in the future?',
+        'Have you ever lived in the countryside?',
+        'Do you ever spend time in the countryside?',
+        'How has your town changed over the last 20 years?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a special day out that didn’t cost a lot. You should say: what you did; when it was; who you were with; and why it was special.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Leisure time.', questions: prompts([
+        'What leisure activities do old and young people prefer?',
+        'How do people spend their leisure time in your country?',
+        'How does technology affect the way people spend leisure time?',
+        'Is leisure time important for everyone?',
+        'Do you think only old people have time for leisure?',
       ]) },
     ],
   },
