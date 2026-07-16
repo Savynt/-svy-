@@ -1175,6 +1175,144 @@ const EXAMS: BuilderTask[] = [
       ]) },
     ],
   },
+  {
+    title: 'IELTS Speaking — Test 41',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Clothes', 'Sports events, competition'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Clothes.', questions: prompts([
+        'Do you usually wear T-shirts?',
+        'Do you like wearing T-shirts?',
+        'Do you like T-shirts with pictures and prints?',
+        'What colour clothes do you like to wear?',
+        'What are the differences between men and women’s preference in colour?',
+        'What kind of clothes do you like to wear?',
+        'What kind of clothes do you never wear?',
+        'Do you wear the same style of clothes on weekdays and weekends?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a time when you watched a live sports event and liked it. You should say: what the sports event was; where and when the sports event took place; why you watched it live; and why you liked it live.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Sports events & competition.', questions: prompts([
+        'What is the difference between watching sports events at home and at the stadium?',
+        'What are the advantages of watching sports events online?',
+        'Why does somebody dislike to watch the Olympic Games?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 42',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Jokes', 'Holidays'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Jokes.', questions: prompts([
+        'Are you good at telling jokes?',
+        'Do your friends like to tell jokes?',
+        'Do you like to watch comedies?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a place you’ve travelled to that you’d recommend to others. You should say: what place it was; why you went there; what you did there; and how you felt about it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Holidays.', questions: prompts([
+        'What do you need to do before you travel?',
+        'What preparations should people make before going on holiday?',
+        'Where do people usually travel on holidays?',
+        'Do you think it’s important to do some preparation before you travel to new places?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 43',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Morning routines', 'Making decisions'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Morning routines.', questions: prompts([
+        'What is your morning routine?',
+        'Do you spend your mornings doing the same things on both weekends and weekdays?',
+        'Is breakfast important?',
+        'Do you like to get up early?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe an important decision you made. You should say: what the decision was; how you made your decision; what the results of the decision were; and why it was important.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Making decisions.', questions: prompts([
+        'Do you think children sometimes have to make important decisions?',
+        'What important decisions do young people need to make after the completion of high school?',
+        'Who can children turn to for help when making a decision?',
+        'How do people make important decisions?',
+        'What are the advantages of advertising?',
+        'Do you think the influence of advertising is good?',
+        'Do you think advertisements can influence our decisions when shopping?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 44',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Evening time', 'Teamwork, leadership'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Evening time.', questions: prompts([
+        'Do you like the morning or the evening?',
+        'What do you usually do in the evening?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a time when you worked in a group. You should say: what the team was like; why you joined it; what you did; and how you felt about it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Teamwork & leadership.', questions: prompts([
+        'Do you prefer to work in a team or on your own?',
+        'Why do some people prefer to work on their own?',
+        'What kinds of jobs require people to work in a team?',
+        'What qualities do you think a good team member should have?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 45',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['History', 'Success in business'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: History.', questions: prompts([
+        'Do you think history is important?',
+        'Do you like to learn about history?',
+        'Do you think the internet is a good place to learn about history?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a successful business person you know. You should say: who this person is; how you know them; what business this person does; and why this person is successful.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Success in business.', questions: prompts([
+        'Why do some people open their own business?',
+        'Is it better to have your own business than work for a boss?',
+        'What do you need to start a business?',
+        'Do you agree that nowadays it is easier to set up a business than in the past?',
+        'Do people in your country like to work in big companies or small companies?',
+        'What challenges and difficulties do people face when they try to have a successful small business?',
+        'What makes some companies more successful than others?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 46',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Old buildings', 'Visiting others, accommodation'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Old buildings.', questions: prompts([
+        'Do you prefer living in an old building or a modern house?',
+        'Should old buildings be preserved?',
+        'Are there any old buildings you want to see in the future?',
+        'What aspect of culture do old buildings reflect?',
+        'How do old buildings affect the appearance of a place?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a home that you like but don’t want to live in. You should say: where it was; what it looked like; why you visited it; and why you don’t want to live there.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Visiting others & accommodation.', questions: prompts([
+        'In your country, when people visit other people in their homes, do they usually bring a gift?',
+        'What kind of houses or apartments do people prefer to buy?',
+        'What is the difference between living in the countryside and the city?',
+        'Do you prefer to live in the city or in the countryside?',
+      ]) },
+    ],
+  },
 ]
 
 /**
