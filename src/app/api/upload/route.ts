@@ -50,6 +50,12 @@ export async function POST(request: Request): Promise<Response> {
       413,
     )
   }
+  // A zero-byte upload is the client's mistake (e.g. a recording that captured
+  // nothing), not a server fault — answer 400 rather than letting saveUpload
+  // throw into the 500 branch.
+  if (file.size === 0) {
+    return json({ ok: false, error: 'File is empty — nothing was recorded or selected.' }, 400)
+  }
 
   try {
     const saved = await saveUpload(file)
