@@ -1275,7 +1275,7 @@ function QuestionCard({
         className={cn(textareaCls, 'mt-2 text-sm')}
         value={q.imageUrl}
         onChange={e => onUpdate({ imageUrl: e.target.value })}
-        placeholder="Image URL (optional) — direct Imgur link, e.g. https://i.imgur.com/xxxx.png"
+        placeholder="Image URL (optional) — direct link from ImgBB, Postimages or Imgur, e.g. https://i.ibb.co/xxxx/chart.png"
       />
       {q.imageUrl && (
         <img
