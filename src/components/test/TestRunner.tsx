@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/Badge'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import {
   QuestionRenderer,
+  isSpeakingAnswer,
   type AnswerValue,
   type RunnerQuestion,
 } from '@/components/test/questions/QuestionRenderer'
@@ -148,6 +149,10 @@ export function TestRunner({ task }: { task: RunnerTask }) {
       const v = answers[q.id]
       if (v == null) return acc
       if (Array.isArray(v)) return acc + (v.some((x) => x.trim().length > 0) ? 1 : 0)
+      // Speaking: a recording counts as answered on its own — notes are optional.
+      if (isSpeakingAnswer(v)) {
+        return acc + (v.audioUrl || (v.notes ?? '').trim().length > 0 ? 1 : 0)
+      }
       return acc + (v.trim().length > 0 ? 1 : 0)
     }, 0)
   }, [answers, flatQuestions])
@@ -686,20 +691,32 @@ function ResultFeedback({
   result: QuestionResult
   userAnswer: AnswerValue | undefined
 }) {
-  const userText =
-    userAnswer == null
-      ? '—'
-      : Array.isArray(userAnswer)
-        ? userAnswer.filter(Boolean).map((a) => answerToText(a)).join(', ') || '—'
-        : answerToText(userAnswer) || '—'
+  // Speaking answers hold a recording (+ optional notes) rather than text.
+  const speaking = isSpeakingAnswer(userAnswer) ? userAnswer : null
+  const userText = (() => {
+    if (userAnswer == null) return '—'
+    if (isSpeakingAnswer(userAnswer)) {
+      return userAnswer.notes?.trim() || (userAnswer.audioUrl ? 'Recording submitted' : '—')
+    }
+    if (Array.isArray(userAnswer)) {
+      return userAnswer.filter(Boolean).map((a) => answerToText(a)).join(', ') || '—'
+    }
+    return answerToText(userAnswer) || '—'
+  })()
 
   if (result.needsGrading) {
     return (
-      <div className="ml-10 mt-3 flex items-start gap-2 rounded-xl border border-accent-400/40 bg-accent-400/10 px-3.5 py-2.5 text-sm">
-        <CircleDashed className="mt-0.5 h-4 w-4 shrink-0 text-accent-600" aria-hidden />
-        <span className="text-navy-600">
-          Saved for grading. A coach or AI examiner will review your response and add a band score.
-        </span>
+      <div className="ml-10 mt-3 space-y-2 rounded-xl border border-accent-400/40 bg-accent-400/10 px-3.5 py-2.5 text-sm">
+        <div className="flex items-start gap-2">
+          <CircleDashed className="mt-0.5 h-4 w-4 shrink-0 text-accent-600" aria-hidden />
+          <span className="text-navy-600">
+            Saved for grading. A coach or AI examiner will review your response and add a band score.
+          </span>
+        </div>
+        {/* Let the student hear back exactly what the coach will hear. */}
+        {speaking?.audioUrl && (
+          <audio controls src={speaking.audioUrl} className="h-9 w-full max-w-sm" />
+        )}
       </div>
     )
   }

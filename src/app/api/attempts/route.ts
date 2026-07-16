@@ -20,7 +20,21 @@ import type { Prisma } from '@prisma/client'
  * Essay / speaking answers are stored and flagged needs-grading.
  */
 
-const answerValueSchema = z.union([z.string(), z.array(z.string())])
+/**
+ * A speaking answer is `{ audioUrl, notes }` rather than text. `audioUrl` must be
+ * one of our own /api/files/ URLs — never an arbitrary link — so a client cannot
+ * point a stored answer at some third-party host. SPEAKING_PROMPT is graded by a
+ * coach/AI, so this shape never reaches the objective grader.
+ */
+const speakingAnswerSchema = z.object({
+  audioUrl: z
+    .string()
+    .regex(/^\/api\/files\/[0-9a-f-]{36}\.[a-z0-9]{2,5}$/, 'Recording must be an uploaded file.')
+    .optional(),
+  notes: z.string().max(5000).optional(),
+})
+
+const answerValueSchema = z.union([z.string(), z.array(z.string()), speakingAnswerSchema])
 
 const bodySchema = z.object({
   taskId: z.string().min(1),
@@ -99,16 +113,23 @@ export async function POST(request: Request): Promise<Response> {
     return json({ error: 'This task has no questions to grade.' }, 422)
   }
 
-  // Map learner responses by questionId, ignoring unknown ids.
-  const responseById = new Map<string, RawAnswer>()
+  // Map learner responses by questionId, ignoring unknown ids. A response may be
+  // text, a list, or a speaking `{ audioUrl, notes }` object — the last is stored
+  // as-is but never graded.
+  type StoredResponse = z.infer<typeof answerValueSchema>
+  const responseById = new Map<string, StoredResponse>()
   for (const a of parsed.answers) {
     responseById.set(a.questionId, a.response)
   }
 
+  /** The grader only understands text/lists; speaking objects are subjective. */
+  const gradable = (v: StoredResponse | undefined): RawAnswer =>
+    v == null || typeof v === 'string' || Array.isArray(v) ? (v ?? null) : null
+
   // Build gradable items in question order (one per real question).
   const items: GradableItem[] = task.questions.map((q) => ({
     type: q.type,
-    response: responseById.get(q.id) ?? null,
+    response: gradable(responseById.get(q.id)),
     correct: asRawAnswer(q.answer),
     points: q.points,
   }))

@@ -3,6 +3,7 @@
 import { useId } from 'react'
 import { cn } from '@/lib/cn'
 import { Badge } from '@/components/ui/Badge'
+import { SpeakingRecorder } from '@/components/test/questions/SpeakingRecorder'
 import type { QuestionType } from '@/types/task'
 
 /**
@@ -33,7 +34,32 @@ export interface RunnerQuestion {
   blankCount: number
 }
 
-export type AnswerValue = string | string[]
+/**
+ * A speaking answer carries the uploaded recording plus optional notes.
+ * SPEAKING_PROMPT is graded by a coach/AI (never by `@/lib/grade`), so the extra
+ * shape never reaches the objective grader.
+ */
+export type SpeakingAnswerValue = { audioUrl?: string; notes?: string }
+
+export type AnswerValue = string | string[] | SpeakingAnswerValue
+
+/** True for a speaking answer (`{ audioUrl, notes }`) rather than a plain value. */
+export function isSpeakingAnswer(v: AnswerValue | undefined): v is SpeakingAnswerValue {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
+}
+
+/**
+ * Objective question types only ever store a string / string[]; the speaking
+ * shape can never reach them. These narrow it away so each renderer stays typed
+ * without repeating the guard.
+ */
+function asText(v: AnswerValue | undefined): string {
+  return typeof v === 'string' ? v : ''
+}
+
+function asList(v: AnswerValue | undefined): string[] {
+  return Array.isArray(v) ? v : typeof v === 'string' ? [v] : []
+}
 
 interface QuestionRendererProps {
   question: RunnerQuestion
@@ -212,7 +238,7 @@ function ChoiceQuestion({
   locked: boolean
   multi: boolean
 }) {
-  const selected = new Set(Array.isArray(value) ? value : value ? [value] : [])
+  const selected = new Set(asList(value))
 
   const toggle = (key: string) => {
     if (locked) return
@@ -302,7 +328,7 @@ function CompletionQuestion({
   const count = Math.max(1, question.blankCount)
 
   if (count === 1) {
-    const single = Array.isArray(value) ? (value[0] ?? '') : (value ?? '')
+    const single = Array.isArray(value) ? (value[0] ?? '') : asText(value)
     return (
       <div className="max-w-sm">
         <GapInput
@@ -317,7 +343,7 @@ function CompletionQuestion({
     )
   }
 
-  const values = Array.isArray(value) ? value : value ? [value] : []
+  const values = asList(value)
   return (
     <div className="grid gap-2 sm:grid-cols-2">
       {Array.from({ length: count }).map((_, i) => (
@@ -393,8 +419,28 @@ function FreeResponseQuestion({
   locked: boolean
   speaking: boolean
 }) {
-  const text = typeof value === 'string' ? value : Array.isArray(value) ? value.join(' ') : ''
+  // Speaking answers are `{ audioUrl, notes }`; writing stays a plain string.
+  // Attempts recorded before the recorder existed are plain strings too, so keep
+  // reading those as notes rather than dropping them.
+  const speakingValue: SpeakingAnswerValue =
+    speaking && value && typeof value === 'object' && !Array.isArray(value)
+      ? value
+      : speaking && typeof value === 'string'
+        ? { notes: value }
+        : {}
+
+  const text = speaking
+    ? (speakingValue.notes ?? '')
+    : typeof value === 'string'
+      ? value
+      : Array.isArray(value)
+        ? value.join(' ')
+        : ''
   const words = text.trim() ? text.trim().split(/\s+/).length : 0
+
+  const setNotes = (notes: string) =>
+    speaking ? onChange({ ...speakingValue, notes }) : onChange(notes)
+
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
@@ -404,31 +450,24 @@ function FreeResponseQuestion({
         </span>
       </div>
       {speaking && (
-        <div className="flex items-center gap-3 rounded-xl border border-dashed border-navy-200 bg-sky-50/60 px-4 py-3 text-sm text-navy-500">
-          <span
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-500/10 text-rose-500"
-            aria-hidden
-          >
-            ●
-          </span>
-          <span>
-            Audio recording opens here on test day. For now, jot speaking notes below — they’re saved
-            with your attempt for coach review.
-          </span>
-        </div>
+        <SpeakingRecorder
+          audioUrl={speakingValue.audioUrl}
+          onAudioChange={(url) => onChange({ ...speakingValue, audioUrl: url })}
+          locked={locked}
+        />
       )}
       <textarea
-        rows={speaking ? 4 : 8}
+        rows={speaking ? 3 : 8}
         disabled={locked}
         value={text}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => setNotes(e.target.value)}
         autoCorrect="off"
         autoCapitalize="sentences"
         autoComplete="off"
         spellCheck={false}
         aria-label={`Response for question ${question.order}`}
         placeholder={
-          speaking ? 'Notes for your spoken answer…' : 'Write your response here…'
+          speaking ? 'Optional notes for your spoken answer…' : 'Write your response here…'
         }
         className={cn(
           'w-full resize-y rounded-xl border border-navy-200 bg-white px-3.5 py-3 text-sm leading-relaxed text-navy-900 shadow-sm outline-none transition focus:border-navy-400 focus:ring-2 focus:ring-navy-200 disabled:cursor-not-allowed disabled:bg-navy-50/60 placeholder:text-navy-300',

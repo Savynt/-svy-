@@ -15,6 +15,13 @@ const schema = z.object({
   ACCESS_TOKEN_TTL: z.string().default('15m'),
   REFRESH_TOKEN_TTL: z.string().default('30d'),
 
+  /**
+   * Where uploaded files live (task images, speaking recordings). On Railway this
+   * points at a mounted Volume so files survive redeploys; locally it is a
+   * gitignored folder in the repo. Served back through /api/files/<name>.
+   */
+  UPLOAD_DIR: z.string().default('./.uploads'),
+
   // Public
   NEXT_PUBLIC_APP_URL: z.string().url().default('http://localhost:3000'),
   NEXT_PUBLIC_APP_NAME: z.string().default('Savynt'),
@@ -28,6 +35,7 @@ export const env = schema.parse({
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
   ACCESS_TOKEN_TTL: process.env.ACCESS_TOKEN_TTL,
   REFRESH_TOKEN_TTL: process.env.REFRESH_TOKEN_TTL,
+  UPLOAD_DIR: process.env.UPLOAD_DIR,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
 })
