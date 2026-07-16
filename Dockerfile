@@ -65,6 +65,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
+# Uploads (task images, speaking recordings) live on a Volume mounted at /data.
+# Create the mount point in the image owned by the app user: an empty volume
+# inherits the mount point's ownership on first mount. Without this the volume
+# arrives as root:root and the non-root server cannot write (EACCES on mkdir).
+RUN mkdir -p /data/uploads && chown -R nextjs:nodejs /data
+
 USER nextjs
 EXPOSE 3000
 
