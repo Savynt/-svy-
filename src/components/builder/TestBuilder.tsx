@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/Input'
 import { ImageField } from '@/components/builder/ImageField'
 import { cn } from '@/lib/cn'
 import {
-  BUILDER_TYPE_META, TFNG_VALUES, TRACK_SKILLS, SKILL_ALLOWED_TYPES,
+  BUILDER_TYPE_META, ternaryValuesFor, TRACK_SKILLS, SKILL_ALLOWED_TYPES,
   type BuilderQuestionType,
 } from '@/types/builder'
 
@@ -1372,12 +1372,12 @@ function QuestionEditor({
     )
   }
 
-  if (group.type === 'TRUE_FALSE_NOTGIVEN') {
+  if (group.type === 'TRUE_FALSE_NOTGIVEN' || group.type === 'YES_NO_NOTGIVEN') {
     return (
       <div className="mt-3">
         <p className="mb-1.5 text-xs font-semibold text-navy-500">Answer</p>
         <div className="flex gap-2">
-          {TFNG_VALUES.map(v => (
+          {ternaryValuesFor(group.type).map(v => (
             <button
               key={v}
               type="button"

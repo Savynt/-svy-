@@ -32,7 +32,8 @@ import {
 export const BUILDER_QUESTION_TYPES = [
   'MULTIPLE_CHOICE', // one correct option
   'MULTI_SELECT', // several correct options
-  'TRUE_FALSE_NOTGIVEN', // TRUE / FALSE / NOT_GIVEN
+  'TRUE_FALSE_NOTGIVEN', // TRUE / FALSE / NOT_GIVEN — about facts in the passage
+  'YES_NO_NOTGIVEN', // YES / NO / NOT_GIVEN — about the writer's views/claims
   'SHORT_ANSWER', // typed answer (gap-fill); "/" separates accepted alternates
   'ESSAY', // writing — graded by coach/AI later
   'SPEAKING_PROMPT', // speaking — recorded, graded later
@@ -41,7 +42,9 @@ export const BUILDER_QUESTION_TYPES = [
 /** Which question types are allowed per skill. */
 export const SKILL_ALLOWED_TYPES: Record<string, readonly (typeof BUILDER_QUESTION_TYPES)[number][]> = {
   LISTENING: ['MULTIPLE_CHOICE', 'MULTI_SELECT', 'TRUE_FALSE_NOTGIVEN', 'SHORT_ANSWER'],
-  READING:   ['MULTIPLE_CHOICE', 'MULTI_SELECT', 'TRUE_FALSE_NOTGIVEN', 'SHORT_ANSWER'],
+  // Real IELTS Reading asks TRUE/FALSE/NOT GIVEN about facts and
+  // YES/NO/NOT GIVEN about the writer's views — both appear in one paper.
+  READING:   ['MULTIPLE_CHOICE', 'MULTI_SELECT', 'TRUE_FALSE_NOTGIVEN', 'YES_NO_NOTGIVEN', 'SHORT_ANSWER'],
   SPEAKING:  ['SPEAKING_PROMPT'],
   WRITING:   ['ESSAY'],
   MATH:      ['MULTIPLE_CHOICE', 'SHORT_ANSWER'], // SHORT_ANSWER = grid-in
@@ -72,7 +75,13 @@ export const BUILDER_TYPE_META: Record<
     label: 'True / False / Not Given',
     hasOptions: false,
     objective: true,
-    hint: 'Pick the correct statement value.',
+    hint: 'For statements about facts in the passage. Pick the correct value.',
+  },
+  YES_NO_NOTGIVEN: {
+    label: 'Yes / No / Not Given',
+    hasOptions: false,
+    objective: true,
+    hint: 'For statements about the writer’s views or claims. Pick the correct value.',
   },
   SHORT_ANSWER: {
     label: 'Short answer / gap fill',
@@ -117,6 +126,14 @@ export const TRACK_SKILLS: Record<string, { value: string; label: string }[]> = 
 
 /** True/False/Not Given accepted values (also the stored answer tokens). */
 export const TFNG_VALUES = ['TRUE', 'FALSE', 'NOT_GIVEN'] as const
+
+/** Yes/No/Not Given accepted values (also the stored answer tokens). */
+export const YNG_VALUES = ['YES', 'NO', 'NOT_GIVEN'] as const
+
+/** The accepted answer tokens for whichever of the two ternary types is in use. */
+export function ternaryValuesFor(type: BuilderQuestionType): readonly string[] {
+  return type === 'YES_NO_NOTGIVEN' ? YNG_VALUES : TFNG_VALUES
+}
 
 const builderOptionSchema = z.object({
   text: z.string().trim().min(1, 'Option text is required'),
@@ -238,10 +255,12 @@ function questionToNormalized(
       }
     }
 
-    case 'TRUE_FALSE_NOTGIVEN': {
+    case 'TRUE_FALSE_NOTGIVEN':
+    case 'YES_NO_NOTGIVEN': {
+      const accepted = ternaryValuesFor(type)
       const value = q.answerText.toUpperCase().replace(/\s+/g, '_')
-      if (!TFNG_VALUES.includes(value as (typeof TFNG_VALUES)[number])) {
-        throw new Error(`"${q.prompt}": choose TRUE, FALSE or NOT_GIVEN.`)
+      if (!accepted.includes(value)) {
+        throw new Error(`"${q.prompt}": choose ${accepted.join(', ')}.`)
       }
       return { ...base, data: Object.keys(img).length ? img : undefined, answer: value }
     }
