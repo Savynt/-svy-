@@ -1397,7 +1397,11 @@ function QuestionEditor({
     )
   }
 
-  if (group.type === 'SHORT_ANSWER') {
+  // Every remaining objective type without options (short answer + the
+  // completion family) is keyed by typing the accepted answer. Driving this off
+  // the metadata means a new gap-fill type gets its editor for free instead of
+  // silently falling through to "graded manually".
+  if (meta.objective && !meta.hasOptions) {
     return (
       <div className="mt-3">
         <p className="mb-1.5 text-xs font-semibold text-navy-500">Accepted answer</p>
@@ -1405,8 +1409,9 @@ function QuestionEditor({
           className="block w-full rounded-xl border border-navy-200 bg-white px-3.5 py-2.5 text-sm text-navy-800 placeholder:text-navy-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400"
           value={question.answerText}
           onChange={e => onAnswerText(e.target.value)}
-          placeholder="Type the answer. Separate alternates with / (e.g. color/colour)"
+          placeholder={meta.hint}
         />
+        <p className="mt-1 text-xs text-navy-400">{meta.hint}</p>
       </div>
     )
   }

@@ -35,16 +35,30 @@ export const BUILDER_QUESTION_TYPES = [
   'TRUE_FALSE_NOTGIVEN', // TRUE / FALSE / NOT_GIVEN — about facts in the passage
   'YES_NO_NOTGIVEN', // YES / NO / NOT_GIVEN — about the writer's views/claims
   'SHORT_ANSWER', // typed answer (gap-fill); "/" separates accepted alternates
+  // Gap-fill families. One question may hold several blanks: ";" separates the
+  // blanks, "/" the accepted alternates inside one blank. The number of blanks
+  // is derived from the answer key (see answerArity in the test page).
+  'SENTENCE_COMPLETION',
+  'SUMMARY_COMPLETION',
+  'NOTE_COMPLETION',
+  'TABLE_COMPLETION',
   'ESSAY', // writing — graded by coach/AI later
   'SPEAKING_PROMPT', // speaking — recorded, graded later
 ] as const
 
 /** Which question types are allowed per skill. */
 export const SKILL_ALLOWED_TYPES: Record<string, readonly (typeof BUILDER_QUESTION_TYPES)[number][]> = {
-  LISTENING: ['MULTIPLE_CHOICE', 'MULTI_SELECT', 'TRUE_FALSE_NOTGIVEN', 'SHORT_ANSWER'],
+  LISTENING: [
+    'MULTIPLE_CHOICE', 'MULTI_SELECT', 'TRUE_FALSE_NOTGIVEN', 'SHORT_ANSWER',
+    'SENTENCE_COMPLETION', 'NOTE_COMPLETION', 'TABLE_COMPLETION',
+  ],
   // Real IELTS Reading asks TRUE/FALSE/NOT GIVEN about facts and
-  // YES/NO/NOT GIVEN about the writer's views — both appear in one paper.
-  READING:   ['MULTIPLE_CHOICE', 'MULTI_SELECT', 'TRUE_FALSE_NOTGIVEN', 'YES_NO_NOTGIVEN', 'SHORT_ANSWER'],
+  // YES/NO/NOT GIVEN about the writer's views — both appear in one paper —
+  // alongside the summary/sentence/note/table completion families.
+  READING: [
+    'MULTIPLE_CHOICE', 'MULTI_SELECT', 'TRUE_FALSE_NOTGIVEN', 'YES_NO_NOTGIVEN', 'SHORT_ANSWER',
+    'SENTENCE_COMPLETION', 'SUMMARY_COMPLETION', 'NOTE_COMPLETION', 'TABLE_COMPLETION',
+  ],
   SPEAKING:  ['SPEAKING_PROMPT'],
   WRITING:   ['ESSAY'],
   MATH:      ['MULTIPLE_CHOICE', 'SHORT_ANSWER'], // SHORT_ANSWER = grid-in
@@ -88,6 +102,30 @@ export const BUILDER_TYPE_META: Record<
     hasOptions: false,
     objective: true,
     hint: 'Type the accepted answer. Separate alternates with “/”, e.g. color/colour.',
+  },
+  SENTENCE_COMPLETION: {
+    label: 'Sentence completion',
+    hasOptions: false,
+    objective: true,
+    hint: 'Complete the sentence. One blank: “migration”. Several: separate with “;”. Alternates with “/”.',
+  },
+  SUMMARY_COMPLETION: {
+    label: 'Summary completion',
+    hasOptions: false,
+    objective: true,
+    hint: 'Fill the summary’s blanks. Separate blanks with “;”, alternates with “/”.',
+  },
+  NOTE_COMPLETION: {
+    label: 'Note completion',
+    hasOptions: false,
+    objective: true,
+    hint: 'Fill the notes’ blanks. Separate blanks with “;”, alternates with “/”.',
+  },
+  TABLE_COMPLETION: {
+    label: 'Table completion',
+    hasOptions: false,
+    objective: true,
+    hint: 'Fill the table’s blanks. Separate blanks with “;”, alternates with “/”.',
   },
   ESSAY: {
     label: 'Essay (writing)',
@@ -268,6 +306,23 @@ function questionToNormalized(
     case 'SHORT_ANSWER': {
       if (!q.answerText) throw new Error(`"${q.prompt}": enter the accepted answer.`)
       return { ...base, data: Object.keys(img).length ? img : undefined, answer: q.answerText }
+    }
+
+    case 'SENTENCE_COMPLETION':
+    case 'SUMMARY_COMPLETION':
+    case 'NOTE_COMPLETION':
+    case 'TABLE_COMPLETION': {
+      // ";" splits the blanks; "/" inside a blank stays untouched — the grader
+      // expands it as accepted alternates. The stored array's length is what
+      // tells the test player how many inputs to draw.
+      const blanks = q.answerText
+        .split(';')
+        .map((b) => b.trim())
+        .filter(Boolean)
+      if (blanks.length === 0) {
+        throw new Error(`"${q.prompt}": enter the accepted answer for each blank.`)
+      }
+      return { ...base, data: Object.keys(img).length ? img : undefined, answer: blanks }
     }
 
     case 'ESSAY':
