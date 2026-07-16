@@ -1042,6 +1042,139 @@ const EXAMS: BuilderTask[] = [
       ]) },
     ],
   },
+  {
+    title: 'IELTS Speaking — Test 35',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Parks', 'Getting up early'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Parks.', questions: prompts([
+        'Do you like to go to parks?',
+        'When was the last time you went to the park?',
+        'Do people in your country often go to parks?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe an occasion when you got up extremely early. You should say: when this happened; what you needed to do on that day; who you were with; and how you felt about getting up early on that day.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Getting up early.', questions: prompts([
+        'Why do people get up early?',
+        'Are there any situations when it’s not good to arrive early?',
+        'Is it good to arrive early in any situation?',
+        'Why do some people stay up late at night?',
+        'Is it easy to get up early?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 36',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Science', 'Rules and laws'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Science.', questions: prompts([
+        'Do you like science?',
+        'Did you like science classes when you were young?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a new law you would like to introduce in your country. You should say: what law it is and what changes it brings; whether it will be popular; how you came up with the new law; and how you feel about it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Rules and laws.', questions: prompts([
+        'Do people in your country usually obey the law?',
+        'What are some rules that exist in schools or workplaces in your country?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 37',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Outer space and stars', 'Growing plants'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Outer space and stars.', questions: prompts([
+        'Do you want to travel in the outer space?',
+        'What would you do if you had an opportunity?',
+        'Do you think it’s necessary to see other planets?',
+        'Are you interested in films about outer space and stars?',
+        'Do you like science fiction movies?',
+        'Have you ever taken a course about stars?',
+        'Is it important to study stars?',
+        'Do you want to know more about outer space?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a person you know who loves to grow plants (vegetables, fruits, flowers). You should say: who this person is; what this person grows; where this person grows them; and why this person loves to grow plants.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Growing plants.', questions: prompts([
+        'Do people in your country like to grow plants?',
+        'What are the advantages of growing plants at home?',
+        'Do people like to grow vegetables in your country?',
+        'What are the advantages of growing vegetables at home?',
+        'How do people feel when they eat vegetables that they grew on their own?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 38',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Headphones', 'Friendship, social media'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Headphones.', questions: prompts([
+        'Do you use headphones?',
+        'In what situations would you use headphones?',
+        'What type of headphones do you use?',
+        'In what situations would you not use headphones?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a friend from your childhood. You should say: who this person is; how you met each other; what you did together; and explain why you liked him or her.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Friendship & social media.', questions: prompts([
+        'Do you still keep in touch with your friends from childhood?',
+        'What’s the difference between having younger friends and older friends?',
+        'Has technology changed people’s friendships? How?',
+        'What do you think of communicating via social media?',
+        'Will online social media replace face-to-face communication?',
+        'Is it necessary for kids to have some close friends?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 39',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Singing', 'Planning'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Singing.', questions: prompts([
+        'Do you think singing can bring happiness to people?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a plan you had to change. You should say: what the plan was; why you had to change it; what the new plan was; and how you felt about the change.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Planning.', questions: prompts([
+        'Do old people often change plans?',
+        'Do young people like to change plans?',
+        'What are the common reasons when people need to change plans?',
+        'How would you tell your friends if you had to change your plans?',
+        'How does technology help people make plans?',
+        'Why do parents still make plans for their children nowadays?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 40',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Art', 'Food'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Art.', questions: prompts([
+        'Do you like modern art or traditional art?',
+        'Do you like art?',
+        'Have you ever visited an art gallery?',
+        'Do you think it would be interesting for you to be an artist?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a type of food that people eat at special events. You should say: what the food is; why people eat it at special events; how people prepare this food; and why you like this food so much.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Food.', questions: prompts([
+        'What food do you eat on special occasions?',
+        'Is food now better than in the past?',
+        'Are there any differences between the food people eat today and the food people ate in the past?',
+      ]) },
+    ],
+  },
 ]
 
 /**
