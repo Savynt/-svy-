@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
+import { ImageField } from '@/components/builder/ImageField'
 import { cn } from '@/lib/cn'
 import {
   BUILDER_TYPE_META, TFNG_VALUES, TRACK_SKILLS, SKILL_ALLOWED_TYPES,
@@ -1271,19 +1272,11 @@ function QuestionCard({
         placeholder="Question text…"
       />
 
-      <input
-        className={cn(textareaCls, 'mt-2 text-sm')}
+      <ImageField
         value={q.imageUrl}
-        onChange={e => onUpdate({ imageUrl: e.target.value })}
-        placeholder="Image URL (optional) — direct link from ImgBB, Postimages or Imgur, e.g. https://i.ibb.co/xxxx/chart.png"
+        onChange={(url) => onUpdate({ imageUrl: url })}
+        inputCls={textareaCls}
       />
-      {q.imageUrl && (
-        <img
-          src={q.imageUrl}
-          alt="preview"
-          className="mt-2 max-h-48 w-full rounded-lg object-contain border border-navy-100"
-        />
-      )}
 
       <QuestionEditor
         group={group}
