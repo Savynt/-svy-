@@ -43,6 +43,10 @@ export interface SecurityHeader {
  *    ImgBB (`i.ibb.co`) and Postimages (`i.postimg.cc`). Add a host here before
  *    coaches use it, or the browser blocks the image.
  *  - `connect-src 'self'`: same-origin API route handlers only.
+ *  - `frame-src` allow-lists `https://www.desmos.com` — the SAT Math test and the
+ *    builder preview embed the Desmos graphing calculator in an iframe. Omitting
+ *    the directive makes it fall back to `default-src 'self'` and the calculator
+ *    silently fails to load.
  *  - `frame-ancestors 'none'` is the modern twin of X-Frame-Options;
  *    `upgrade-insecure-requests` forces https on any stray http subresource.
  */
@@ -55,6 +59,10 @@ export function buildCspHeaderValue(nonce: string, isDev = process.env.NODE_ENV 
     "img-src 'self' data: blob: https://i.imgur.com https://i.ibb.co https://i.postimg.cc",
     "font-src 'self' data:",
     "connect-src 'self'",
+    // The SAT Math test embeds the Desmos graphing calculator in an iframe
+    // (TestRunner + the builder preview). Without frame-src the browser falls
+    // back to default-src 'self' and blocks it, which breaks SAT Math.
+    "frame-src 'self' https://www.desmos.com",
     "form-action 'self'",
     "frame-ancestors 'none'",
     "object-src 'none'",
