@@ -50,8 +50,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Run as a non-root user.
-RUN addgroup --system --gid 1001 nodejs \
+# Run as a non-root user. `su-exec` lets the entrypoint drop from root to that
+# user after it has fixed the volume's ownership (see docker-entrypoint.sh).
+RUN apk add --no-cache su-exec \
+  && addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
 
 # Public assets and the standalone server + traced node_modules.
@@ -66,13 +68,16 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modul
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 # Uploads (task images, speaking recordings) live on a Volume mounted at /data.
-# Create the mount point in the image owned by the app user: an empty volume
-# inherits the mount point's ownership on first mount. Without this the volume
-# arrives as root:root and the non-root server cannot write (EACCES on mkdir).
-RUN mkdir -p /data/uploads && chown -R nextjs:nodejs /data
+# The entrypoint starts as root, chowns the freshly-mounted volume to `nextjs`
+# and then drops privileges — a build-time chown would be masked by the mount.
+COPY --chown=nextjs:nodejs docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-USER nextjs
 EXPOSE 3000
+
+# NOTE: intentionally no `USER nextjs` — the entrypoint needs root to fix the
+# volume's ownership and then runs the server as `nextjs` via su-exec.
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # server.js is emitted by Next's standalone output.
 CMD ["node", "server.js"]
