@@ -905,11 +905,172 @@ const EXAMS: BuilderTask[] = [
       ]) },
     ],
   },
+  {
+    title: 'IELTS Speaking — Test 29',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Music', 'TV programs and videos'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Music.', questions: prompts([
+        'Do you prefer sad or happy music?',
+        'Does happy music make you feel more excited?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a program you like to watch. You should say: what program it is; when you watch it; and why you like it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: TV programs & videos.', questions: prompts([
+        'What shows do old people and young people watch?',
+        'What other programs do you like to watch?',
+        'What TV programs are popular in your country?',
+        'Do people in your country like to watch foreign TV programs?',
+        'Do you think watching talk shows is a waste of time?',
+        'Do you think we can acquire knowledge from watching TV programs?',
+        'What’s the benefit of letting kids watch animal videos rather than visiting zoos?',
+        'Do teachers play videos in class in your country?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 30',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Tidiness', 'Buildings and architecture'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Tidiness.', questions: prompts([
+        'Would you say you are a tidy person?',
+        'Do you like to keep things tidy?',
+        'How do you keep things tidy?',
+        'Do you think it is possible for people to be tidy all the time?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe an unusual building you’d like to visit. You should say: what building it is; how you know about it; what the building looks like; and why you want to visit it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Buildings & architecture.', questions: prompts([
+        'Is the appearance of a public building as important as its functionality?',
+        'Is it worth spending a lot of money on the appearance of a building?',
+        'Is it more important for a building to look good on the outside or on the inside?',
+        'Why do people like to visit historical places?',
+        'What types of buildings are popular in your country?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 31',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Websites', 'Watching TV'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Websites.', questions: prompts([
+        'What kinds of websites do you often visit?',
+        'What kinds of websites are popular in your country?',
+        'What is your favourite website?',
+        'Are there any changes to the websites you often visit?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a TV series that you like. You should say: what it is about; who the main characters are; and why you like it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Watching TV.', questions: prompts([
+        'Do you think parents should limit their children from watching television?',
+        'Would your family watch TV together?',
+        'What are the differences in television viewing habits between the elderly and the young?',
+        'How has technology changed the way people watch television?',
+        'What do you think about ads in TV series?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 32',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Watches', 'Travelling and rest'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Watches.', questions: prompts([
+        'Do you like to wear watches?',
+        'Do you think a watch is important for you?',
+        'Have you ever received a watch as a gift?',
+        'Why do people like expensive watches?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a place you’d like to visit in your free time. You should say: where it is; what you will do there; how long you will stay there; and why you’d like to visit it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Travelling & rest.', questions: prompts([
+        'Why do some people prefer to travel in their own country rather than going abroad?',
+        'Some people don’t like to travel abroad. Why?',
+        'Why do people choose to travel or live abroad?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 33',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Shopping', 'Food and cooking'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Shopping.', questions: prompts([
+        'Do you like shopping?',
+        'How often do you go shopping?',
+        'Do you compare prices when you shop?',
+        'Is it difficult for you to make choices when you shop?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a special cake you received. You should say: what kind of cake it was; when you had it; who you were with; and why it was special.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Food and cooking.', questions: prompts([
+        'What food do people in your country eat on special occasions?',
+        'What is the difference between special food in your country and other countries?',
+        'Why do many people like to spend a lot of money on food on special days?',
+        'What do you think of people using their mobile phones during a meal?',
+        'Do you think it’s good to communicate when eating with your family?',
+        'More and more people are unwilling to cook. Why is this happening?',
+      ]) },
+    ],
+  },
+  {
+    title: 'IELTS Speaking — Test 34',
+    track: 'IELTS', skill: 'SPEAKING', type: 'PRACTICE', durationMin: 14,
+    topics: ['Cars', 'Tall buildings'], publish: true,
+    groups: [
+      { type: 'SPEAKING_PROMPT', instruction: PART1_INSTRUCTION + ' Topic: Cars.', questions: prompts([
+        'What type of car do you like?',
+        'What colour car would you choose to buy?',
+        'Do you think car colours are important?',
+        'What do you usually do when there’s a traffic jam?',
+        'Do you prefer to be a driver or a passenger?',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART2_INSTRUCTION, questions: prompts([
+        'Describe a tall building in your town that you like or dislike. You should say: where this building is; what it looks like; what it is used for; and explain why you like or dislike it.',
+      ]) },
+      { type: 'SPEAKING_PROMPT', instruction: PART3_INSTRUCTION + ' Topic: Tall buildings.', questions: prompts([
+        'What do you think buildings will be like in the future?',
+        'Which do most people prefer, living in a bungalow or in a tall building?',
+        'Why are taller and taller buildings being constructed nowadays?',
+      ]) },
+    ],
+  },
 ]
 
+/**
+ * Optional CLI filter: `npx tsx scripts/seed-speaking.ts 32-34` or `... 5,9`.
+ * Without it every exam is re-upserted, which is slow over the Railway proxy
+ * once the list grows. Matches the trailing number in "… — Test N".
+ */
+function selectExams(argv: string[]): BuilderTask[] {
+  const spec = argv[2]
+  if (!spec) return EXAMS
+  const wanted = new Set<number>()
+  for (const part of spec.split(',')) {
+    const range = part.match(/^(\d+)-(\d+)$/)
+    if (range) {
+      for (let i = Number(range[1]); i <= Number(range[2]); i++) wanted.add(i)
+    } else if (/^\d+$/.test(part)) {
+      wanted.add(Number(part))
+    }
+  }
+  return EXAMS.filter((e) => {
+    const n = Number(e.title.match(/Test (\d+)$/)?.[1])
+    return Number.isFinite(n) && wanted.has(n)
+  })
+}
+
 async function main() {
-  console.log(`Seeding ${EXAMS.length} speaking exam(s)…\n`)
-  for (const raw of EXAMS) {
+  const selected = selectExams(process.argv)
+  console.log(`Seeding ${selected.length} speaking exam(s)…\n`)
+  for (const raw of selected) {
     const parsed = builderTaskSchema.safeParse(raw)
     if (!parsed.success) {
       console.error(`  ✗ "${raw.title}" invalid:`, parsed.error.flatten().fieldErrors)
