@@ -3,6 +3,8 @@ import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import { LocaleProvider } from '@/i18n/client'
 import { getLocale } from '@/i18n/server'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { organizationLd, webSiteLd } from '@/lib/seo/jsonLd'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -55,6 +57,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} className={`${inter.variable} ${jakarta.variable}`}>
       <body>
+        {/* Identity of the site + publisher — every Course/Offer references it. */}
+        <JsonLd data={[organizationLd(), webSiteLd()]} />
         <LocaleProvider locale={locale}>
           {children}
         </LocaleProvider>

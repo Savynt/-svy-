@@ -16,6 +16,8 @@ import { Badge } from '@/components/ui/Badge'
 import { formatUzs } from '@/lib/format'
 import { cn } from '@/lib/cn'
 import { FAQS, FEATURE_ROWS, PAYMENT_METHODS, PLANS } from '@/data/marketing'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { subscriptionOfferLd, faqLd } from '@/lib/seo/jsonLd'
 import { Faq } from './Faq'
 
 export const metadata: Metadata = {
@@ -54,6 +56,8 @@ const COMPARISON_COLUMNS = ['Monthly', '3 Months', 'Yearly'] as const
 export default function PricingPage() {
   return (
     <div>
+      {/* Prices + the FAQ accordion below, mirrored for search/answer engines. */}
+      <JsonLd data={[subscriptionOfferLd(), faqLd()]} />
       <PageHero
         eyebrow="Pricing"
         title="Simple pricing, full access"

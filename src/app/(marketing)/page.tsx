@@ -23,6 +23,8 @@ import { SectionHeading } from '@/components/ui/SectionHeading'
 import { formatUzs } from '@/lib/format'
 import { HeroSection } from '@/components/marketing/HeroSection'
 import { AnimateIn, AnimateStagger, AnimateStaggerItem } from '@/components/ui/AnimateIn'
+import { JsonLd } from '@/components/seo/JsonLd'
+import { coursesLd, subscriptionOfferLd } from '@/lib/seo/jsonLd'
 
 type IconType = ComponentType<{ className?: string }>
 
@@ -139,6 +141,8 @@ const PRICE_UZS = 20000
 export default function LandingPage() {
   return (
     <div className="bg-sky-50">
+      {/* What we teach + what it costs, in a form answer engines can quote. */}
+      <JsonLd data={[...coursesLd(), subscriptionOfferLd()]} />
 
       {/* 1 — HERO (client, animated) */}
       <HeroSection price={PRICE_UZS} />
