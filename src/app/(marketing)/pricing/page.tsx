@@ -18,6 +18,7 @@ import { cn } from '@/lib/cn'
 import { FAQS, FEATURE_ROWS, PAYMENT_METHODS, PLANS } from '@/data/marketing'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { subscriptionOfferLd, faqLd } from '@/lib/seo/jsonLd'
+import { OG_IMAGE } from '@/lib/seo/openGraph'
 import { Faq } from './Faq'
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export const metadata: Metadata = {
     'Simple pricing for Savynt: from 20,000 UZS / month for full access to every IELTS, SAT and General English practice test, the vocabulary trainer and all grammar lessons. Pay locally with Click, Payme or Uzcard.',
   alternates: { canonical: '/pricing' },
   openGraph: {
+    ...OG_IMAGE,
     title: 'Savynt Pricing — one plan, full access',
     description:
       'From 20,000 UZS / month. Every IELTS, SAT and General English test, vocabulary and grammar — pay with Click, Payme or Uzcard.',

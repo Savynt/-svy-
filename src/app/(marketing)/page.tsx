@@ -25,6 +25,7 @@ import { HeroSection } from '@/components/marketing/HeroSection'
 import { AnimateIn, AnimateStagger, AnimateStaggerItem } from '@/components/ui/AnimateIn'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { coursesLd, subscriptionOfferLd } from '@/lib/seo/jsonLd'
+import { OG_IMAGE } from '@/lib/seo/openGraph'
 
 type IconType = ComponentType<{ className?: string }>
 
@@ -34,6 +35,7 @@ export const metadata: Metadata = {
     'Prepare for IELTS and SAT with real exam-style mock tests, and build General English skills — answer keys, instant scoring and band estimates. One subscription — 20,000 UZS / month. Built for learners in Uzbekistan.',
   alternates: { canonical: '/' },
   openGraph: {
+    ...OG_IMAGE,
     type: 'website',
     title: 'Savynt — IELTS, SAT & General English preparation',
     description:

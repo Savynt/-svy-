@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/cn'
 import { SEMINARS, type MarketingSeminar } from '@/data/marketing'
+import { OG_IMAGE } from '@/lib/seo/openGraph'
 
 export const metadata: Metadata = {
   title: 'Free live seminars',
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
     'Join free Savynt seminars on IELTS, SAT and General English prep — live on Google Meet and YouTube Live, with recordings afterwards. No subscription required.',
   alternates: { canonical: '/seminars' },
   openGraph: {
+    ...OG_IMAGE,
     title: 'Free Savynt seminars — live on Google Meet & YouTube',
     description:
       'Free live sessions on IELTS, SAT and General English preparation. Register and get the recording afterwards.',

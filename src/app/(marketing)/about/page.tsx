@@ -4,6 +4,7 @@ import { PageHero } from '@/components/PageHero'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Card, CardBody } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { OG_IMAGE } from '@/lib/seo/openGraph'
 
 export const metadata: Metadata = {
   title: 'About Savynt',
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
     'Savynt is exam prep built for Uzbekistan — affordable, real exam-style practice for IELTS, SAT and General English, with instant scoring and clear progress. Our mission is simple: make a great score reachable for every learner.',
   alternates: { canonical: '/about' },
   openGraph: {
+    ...OG_IMAGE,
     title: 'About Savynt — exam prep built for Uzbekistan',
     description:
       'Affordable, exam-style IELTS, SAT and General English practice with instant scoring and clear progress, made for learners in Uzbekistan.',
