@@ -18,10 +18,11 @@ const baseUrl = env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '')
 /**
  * The brand, spelled the way the pages spell it.
  *
- * Deliberately not `env.NEXT_PUBLIC_APP_NAME` — that still carries the old
- * "SVY" value in every environment, while the layout title and all visible copy
- * say "Savynt". Structured data that disagrees with the page it describes is
- * worse than none: it's exactly the claim an answer engine repeats.
+ * Hardcoded rather than `env.NEXT_PUBLIC_APP_NAME` on purpose: structured data
+ * must always match the visible copy ("Savynt"), and pinning it here means a
+ * stale or mis-set env var can never make the two disagree. Structured data
+ * that contradicts the page it describes is worse than none — it's exactly the
+ * claim an answer engine repeats.
  */
 const APP_NAME = 'Savynt'
 

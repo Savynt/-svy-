@@ -33,7 +33,7 @@ Set these in **Settings → Environment Variables** (Production + Preview):
 | `JWT_ACCESS_SECRET`   | a 32+ char random string (`openssl rand -base64 48`) |
 | `JWT_REFRESH_SECRET`  | a *different* 32+ char random string              |
 | `NEXT_PUBLIC_APP_URL` | your Vercel URL, e.g. `https://svy.vercel.app`    |
-| `NEXT_PUBLIC_APP_NAME`| `SVY`                                             |
+| `NEXT_PUBLIC_APP_NAME`| `Savynt`                                          |
 
 `REDIS_URL`, `ACCESS_TOKEN_TTL`, `REFRESH_TOKEN_TTL` have safe defaults — skip
 unless you want to override them.
@@ -248,7 +248,7 @@ Generate secrets with `openssl rand -base64 32`.
 | `ACCESS_TOKEN_TTL`   | `15m`                                              | access token lifetime |
 | `REFRESH_TOKEN_TTL`  | `30d`                                              | refresh token lifetime |
 | `NEXT_PUBLIC_APP_URL`| `https://app.svy.uz`                               | public origin (Cloudflare) |
-| `NEXT_PUBLIC_APP_NAME`| `SVY`                                             | display name |
+| `NEXT_PUBLIC_APP_NAME`| `Savynt`                                          | display name |
 
 ### Email / SMTP (verification + password-reset codes)
 
