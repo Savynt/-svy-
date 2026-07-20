@@ -108,7 +108,7 @@ function readOptions(data: Record<string, unknown> | null): RunnerOption[] {
  * - `keyStyle: 'roman'` → i, ii, iii… (IELTS Matching Headings convention)
  * - otherwise → A, B, C… (plain matching banks)
  */
-function readBank(
+export function readBank(
   data: Record<string, unknown> | null,
   keys: string[],
   keyStyle: 'letter' | 'roman' = 'letter',

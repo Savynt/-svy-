@@ -23,6 +23,7 @@ import { ProgressBar } from '@/components/ui/ProgressBar'
 import {
   QuestionRenderer,
   isSpeakingAnswer,
+  readBank,
   type AnswerValue,
   type RunnerQuestion,
 } from '@/components/test/questions/QuestionRenderer'
@@ -594,20 +595,11 @@ function GroupContext({
   const bankKey =
     type === 'MATCHING_HEADINGS' ? 'headings' : type === 'MATCHING' ? 'options' : null
   if (!bankKey) return null
-  const bank = data[bankKey]
-  if (!Array.isArray(bank) || bank.length === 0) return null
 
-  const items = bank.map((b, i) => {
-    if (typeof b === 'string') return { key: String.fromCharCode(65 + i), text: b }
-    if (b && typeof b === 'object') {
-      const rec = b as Record<string, unknown>
-      return {
-        key: typeof rec.key === 'string' ? rec.key : String.fromCharCode(65 + i),
-        text: typeof rec.text === 'string' ? rec.text : '',
-      }
-    }
-    return { key: String.fromCharCode(65 + i), text: '' }
-  })
+  // Same source of truth as the per-question dropdown (QuestionRenderer.readBank),
+  // so the listed keys can never disagree with the options a learner picks from.
+  const items = readBank(data, [bankKey], type === 'MATCHING_HEADINGS' ? 'roman' : 'letter')
+  if (items.length === 0) return null
 
   return (
     <div className="mt-3 rounded-xl border border-navy-100 bg-sky-50 p-3">
