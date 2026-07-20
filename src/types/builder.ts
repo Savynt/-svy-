@@ -34,6 +34,7 @@ export const BUILDER_QUESTION_TYPES = [
   'MULTI_SELECT', // several correct options
   'TRUE_FALSE_NOTGIVEN', // TRUE / FALSE / NOT_GIVEN — about facts in the passage
   'YES_NO_NOTGIVEN', // YES / NO / NOT_GIVEN — about the writer's views/claims
+  'MATCHING_HEADINGS', // pick the correct heading (i, ii, iii…) for each paragraph
   'SHORT_ANSWER', // typed answer (gap-fill); "/" separates accepted alternates
   // Gap-fill families. One question may hold several blanks: ";" separates the
   // blanks, "/" the accepted alternates inside one blank. The number of blanks
@@ -56,8 +57,8 @@ export const SKILL_ALLOWED_TYPES: Record<string, readonly (typeof BUILDER_QUESTI
   // YES/NO/NOT GIVEN about the writer's views — both appear in one paper —
   // alongside the summary/sentence/note/table completion families.
   READING: [
-    'MULTIPLE_CHOICE', 'MULTI_SELECT', 'TRUE_FALSE_NOTGIVEN', 'YES_NO_NOTGIVEN', 'SHORT_ANSWER',
-    'SENTENCE_COMPLETION', 'SUMMARY_COMPLETION', 'NOTE_COMPLETION', 'TABLE_COMPLETION',
+    'MULTIPLE_CHOICE', 'MULTI_SELECT', 'TRUE_FALSE_NOTGIVEN', 'YES_NO_NOTGIVEN', 'MATCHING_HEADINGS',
+    'SHORT_ANSWER', 'SENTENCE_COMPLETION', 'SUMMARY_COMPLETION', 'NOTE_COMPLETION', 'TABLE_COMPLETION',
   ],
   SPEAKING:  ['SPEAKING_PROMPT'],
   WRITING:   ['ESSAY'],
@@ -96,6 +97,12 @@ export const BUILDER_TYPE_META: Record<
     hasOptions: false,
     objective: true,
     hint: 'For statements about the writer’s views or claims. Pick the correct value.',
+  },
+  MATCHING_HEADINGS: {
+    label: 'Matching headings',
+    hasOptions: false,
+    objective: true,
+    hint: 'List the headings (i, ii, iii…), then add one question per paragraph and pick its correct heading.',
   },
   SHORT_ANSWER: {
     label: 'Short answer / gap fill',
@@ -195,6 +202,9 @@ export type BuilderQuestion = z.infer<typeof builderQuestionSchema>
 const builderGroupSchema = z.object({
   type: builderQuestionTypeSchema,
   instruction: z.string().trim().min(1, 'Group instruction is required'),
+  /** MATCHING_HEADINGS only: the shared list of headings; keys derived by
+   * position as roman numerals (i, ii, iii…). Author writes only the text. */
+  headings: z.array(z.string().trim().min(1)).optional(),
   /** Theory/explanation shown to the student before the questions (General English). */
   explanation: z.string().trim().optional(),
   /** Grammar example sentences shown to the student before questions. */
@@ -233,6 +243,31 @@ export function optionKey(index: number): string {
   return String.fromCharCode(65 + index)
 }
 
+/**
+ * Positional heading key: 0 → "i", 1 → "ii", … (IELTS Matching Headings).
+ * Must stay in lock-step with the runtime renderer's roman fallback so the
+ * stored bank keys, the author's picked answer and the learner's dropdown all
+ * agree.
+ */
+export function headingKey(index: number): string {
+  const table: ReadonlyArray<readonly [number, string]> = [
+    [10, 'x'],
+    [9, 'ix'],
+    [5, 'v'],
+    [4, 'iv'],
+    [1, 'i'],
+  ]
+  let out = ''
+  let rem = index + 1
+  for (const [val, sym] of table) {
+    while (rem >= val) {
+      out += sym
+      rem -= val
+    }
+  }
+  return out
+}
+
 /** URL-safe slug from a title, suffixed for uniqueness by the caller if needed. */
 export function slugify(title: string): string {
   return title
@@ -261,6 +296,7 @@ function questionToNormalized(
   q: BuilderQuestion,
   type: BuilderQuestionType,
   order: number,
+  headings: ReadonlyArray<{ key: string; text: string }> = [],
 ): NormalizedQuestion {
   const base = {
     order,
@@ -291,6 +327,21 @@ function questionToNormalized(
         data: { options, ...img },
         answer: type === 'MULTIPLE_CHOICE' ? correctKeys[0]! : correctKeys,
       }
+    }
+
+    case 'MATCHING_HEADINGS': {
+      // One question per paragraph. The shared heading bank lives on the group
+      // and is mirrored onto each question (the runtime reads it per-question);
+      // the answer is the key of the correct heading (i, ii, iii…).
+      if (headings.length < 2) {
+        throw new Error(`"${q.prompt || 'Matching headings'}": add at least two headings to the list.`)
+      }
+      const key = q.answerText.trim()
+      if (!key) throw new Error(`"${q.prompt}": pick the correct heading for this paragraph.`)
+      if (!headings.some((h) => h.key === key)) {
+        throw new Error(`"${q.prompt}": the chosen heading is not in the list.`)
+      }
+      return { ...base, data: { headings: [...headings], ...img }, answer: key }
     }
 
     case 'TRUE_FALSE_NOTGIVEN':
@@ -339,12 +390,19 @@ export function builderToNormalized(input: BuilderTask): NormalizedTask {
     if (g.explanation) data.explanation = g.explanation
     if (g.examples?.length) data.examples = g.examples
     if (g.errors?.length) data.errors = g.errors
+    // Heading bank: text-only from the author, keys derived by position. Stored
+    // on the group (for the "List of headings" panel) and mirrored per-question.
+    const headings =
+      g.type === 'MATCHING_HEADINGS'
+        ? (g.headings ?? []).map((text, i) => ({ key: headingKey(i), text }))
+        : []
+    if (headings.length) data.headings = headings
     return {
       order: gi,
       type: g.type,
       instruction: g.instruction,
       data: Object.keys(data).length ? data : undefined,
-      questions: g.questions.map((q, qi) => questionToNormalized(q, g.type, qi)),
+      questions: g.questions.map((q, qi) => questionToNormalized(q, g.type, qi, headings)),
     }
   })
 

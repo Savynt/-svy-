@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/Input'
 import { ImageField } from '@/components/builder/ImageField'
 import { cn } from '@/lib/cn'
 import {
-  BUILDER_TYPE_META, ternaryValuesFor, TRACK_SKILLS, SKILL_ALLOWED_TYPES,
+  BUILDER_TYPE_META, ternaryValuesFor, TRACK_SKILLS, SKILL_ALLOWED_TYPES, headingKey,
   type BuilderQuestionType,
 } from '@/types/builder'
 
@@ -45,6 +45,8 @@ interface GroupDraft {
   explanation: string
   examples: string[]
   errors: ErrorDraft[]
+  /** MATCHING_HEADINGS only: the shared list of heading texts (keys derived). */
+  headings: string[]
   questions: QuestionDraft[]
 }
 interface Paragraph { label: string; text: string }
@@ -107,7 +109,7 @@ function emptyGroup(skill?: string): GroupDraft {
     ? (SKILL_ALLOWED_TYPES[skill] ?? ['MULTIPLE_CHOICE'])
     : ['MULTIPLE_CHOICE']
   const type = (allowed[0] ?? 'MULTIPLE_CHOICE') as BuilderQuestionType
-  return { uid: uid(), type, instruction: '', explanation: '', examples: [], errors: [], questions: [emptyQuestion(type)] }
+  return { uid: uid(), type, instruction: '', explanation: '', examples: [], errors: [], headings: [], questions: [emptyQuestion(type)] }
 }
 
 function cloneGroup(g: GroupDraft): GroupDraft {
@@ -116,6 +118,7 @@ function cloneGroup(g: GroupDraft): GroupDraft {
     uid: uid(),
     examples: [...g.examples],
     errors: g.errors.map(e => ({ ...e })),
+    headings: [...g.headings],
     questions: g.questions.map(q => ({
       ...q,
       uid: uid(),
@@ -329,6 +332,7 @@ export function TestBuilder({ canPublish }: { canPublish: boolean }) {
           explanation: g.explanation || undefined,
           examples: isGrammar && g.examples.length ? g.examples : undefined,
           errors: isGrammar && g.errors.length ? g.errors : undefined,
+          headings: g.type === 'MATCHING_HEADINGS' && g.headings.length ? g.headings : undefined,
           questions: g.questions.map(q => ({
             prompt: q.prompt,
             options: q.options,
@@ -1065,6 +1069,15 @@ function GroupCard({
           />
         )}
 
+        {/* Matching headings: the shared list of headings (keys i, ii, iii…) */}
+        {group.type === 'MATCHING_HEADINGS' && (
+          <HeadingsEditor
+            headings={group.headings}
+            onChange={headings => onUpdateGroup({ headings })}
+            labelCls={labelCls}
+          />
+        )}
+
         {/* questions */}
         <div className="space-y-3">
           {group.questions.map((q, qi) => (
@@ -1148,6 +1161,74 @@ function ExamplesEditor({
           className="inline-flex items-center gap-1 text-sm font-medium text-navy-500 hover:text-navy-800"
         >
           <Plus className="h-4 w-4" /> Add example
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* ================================================================== */
+/* Headings editor — Matching Headings                                  */
+/* ================================================================== */
+
+function HeadingsEditor({
+  headings, onChange, labelCls,
+}: {
+  headings: string[]
+  onChange: (v: string[]) => void
+  labelCls: string
+}) {
+  const [ids, setIds] = useState<string[]>(() => headings.map(() => Math.random().toString(36).slice(2)))
+
+  const handleAdd = () => {
+    setIds(prev => [...prev, Math.random().toString(36).slice(2)])
+    onChange([...headings, ''])
+  }
+
+  const handleDelete = (i: number) => {
+    setIds(prev => prev.filter((_, j) => j !== i))
+    onChange(headings.filter((_, j) => j !== i))
+  }
+
+  return (
+    <div className="rounded-xl border border-navy-100 bg-sky-50/60 p-3">
+      <label className={labelCls}>List of headings</label>
+      <p className="-mt-1 mb-2 text-xs text-navy-400">
+        Numbered i, ii, iii… automatically. Real IELTS lists two or three more headings than
+        paragraphs, so some stay unused.
+      </p>
+      <div className="space-y-2">
+        {headings.map((h, i) => (
+          <div key={ids[i] ?? i} className="flex items-center gap-2">
+            <span className="w-8 shrink-0 text-right text-xs font-bold text-navy-400">
+              {headingKey(i)}.
+            </span>
+            <input
+              className={inlineCls}
+              value={h}
+              onChange={e => {
+                const next = [...headings]
+                next[i] = e.target.value
+                onChange(next)
+              }}
+              placeholder="Heading text…"
+            />
+            <button
+              type="button"
+              aria-label="Remove heading"
+              onClick={() => handleDelete(i)}
+              className="shrink-0 text-navy-300 hover:text-red-500"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={handleAdd}
+          className="inline-flex items-center gap-1 text-sm font-medium text-navy-500 hover:text-navy-800"
+        >
+          <Plus className="h-4 w-4" /> Add heading
         </button>
       </div>
     </div>
@@ -1393,6 +1474,35 @@ function QuestionEditor({
             </button>
           ))}
         </div>
+      </div>
+    )
+  }
+
+  if (group.type === 'MATCHING_HEADINGS') {
+    return (
+      <div className="mt-3">
+        <p className="mb-1.5 text-xs font-semibold text-navy-500">
+          Correct heading for this paragraph
+        </p>
+        {group.headings.length === 0 ? (
+          <p className="text-xs italic text-navy-400">Add headings to the list above first.</p>
+        ) : (
+          <select
+            className="block w-full max-w-md rounded-xl border border-navy-200 bg-white px-3.5 py-2.5 text-sm text-navy-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-navy-400"
+            value={question.answerText}
+            onChange={e => onAnswerText(e.target.value)}
+          >
+            <option value="">Select the correct heading…</option>
+            {group.headings.map((text, i) => {
+              const key = headingKey(i)
+              return (
+                <option key={key} value={key}>
+                  {key}. {text || `(heading ${key})`}
+                </option>
+              )
+            })}
+          </select>
+        )}
       </div>
     )
   }
