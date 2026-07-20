@@ -99,19 +99,34 @@ function readOptions(data: Record<string, unknown> | null): RunnerOption[] {
 }
 
 /** Option bank shared via a group (headings, matching targets). */
-function readBank(data: Record<string, unknown> | null, keys: string[]): RunnerOption[] {
+/**
+ * Read a labelled option/heading bank out of a question's `data`.
+ *
+ * When the source spells out each option's `key`, we keep it verbatim. When it
+ * gives bare strings (or a blank key), we synthesise one:
+ * - `data.numbered` → 1, 2, 3…
+ * - `keyStyle: 'roman'` → i, ii, iii… (IELTS Matching Headings convention)
+ * - otherwise → A, B, C… (plain matching banks)
+ */
+function readBank(
+  data: Record<string, unknown> | null,
+  keys: string[],
+  keyStyle: 'letter' | 'roman' = 'letter',
+): RunnerOption[] {
   if (!data) return []
+  const autoKey = (i: number): string =>
+    data.numbered ? String(i + 1) : keyStyle === 'roman' ? toRoman(i + 1) : toLetter(i)
   for (const k of keys) {
     const raw = data[k]
     if (Array.isArray(raw)) {
       return raw
         .map((o, i): RunnerOption | null => {
           if (typeof o === 'string') {
-            return { key: data.numbered ? String(i + 1) : romanOrLetter(i), text: o }
+            return { key: autoKey(i), text: o }
           }
           if (o && typeof o === 'object') {
             const rec = o as Record<string, unknown>
-            const key = typeof rec.key === 'string' ? rec.key : romanOrLetter(i)
+            const key = typeof rec.key === 'string' && rec.key ? rec.key : autoKey(i)
             const text = typeof rec.text === 'string' ? rec.text : ''
             return { key, text }
           }
@@ -123,8 +138,29 @@ function readBank(data: Record<string, unknown> | null, keys: string[]): RunnerO
   return []
 }
 
-function romanOrLetter(i: number): string {
+/** Fallback bank key by position: A, B, C… (0-based). */
+function toLetter(i: number): string {
   return String.fromCharCode(65 + i)
+}
+
+/** Fallback heading key by position: i, ii, iii, iv…, x, xi… (1-based). */
+function toRoman(n: number): string {
+  const table: ReadonlyArray<readonly [number, string]> = [
+    [10, 'x'],
+    [9, 'ix'],
+    [5, 'v'],
+    [4, 'iv'],
+    [1, 'i'],
+  ]
+  let out = ''
+  let rem = n
+  for (const [val, sym] of table) {
+    while (rem >= val) {
+      out += sym
+      rem -= val
+    }
+  }
+  return out
 }
 
 /** Word/character limit hint, e.g. "NO MORE THAN TWO WORDS". */
@@ -536,7 +572,7 @@ export function QuestionRenderer({
       control = (
         <MatchingQuestion
           question={question}
-          bank={readBank(data, ['headings', 'options', 'bank'])}
+          bank={readBank(data, ['headings', 'options', 'bank'], 'roman')}
           value={value}
           onChange={onChange}
           locked={locked}
