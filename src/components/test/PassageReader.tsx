@@ -102,6 +102,11 @@ export function PassageReader({ html, className }: { html: string; className?: s
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [toolbar, setToolbar] = useState<Toolbar | null>(null)
   const [count, setCount] = useState(0)
+  // The exact range captured when the button appeared. On touch devices, tapping
+  // the button collapses the live selection *before* the click handler runs, so
+  // re-reading window.getSelection() at click time finds nothing — that was why
+  // highlighting did nothing on the phone. We snapshot the range here instead.
+  const pendingRange = useRef<Range | null>(null)
 
   const hide = useCallback(() => setToolbar(null), [])
 
@@ -115,15 +120,17 @@ export function PassageReader({ html, className }: { html: string; className?: s
     if (!root.contains(range.commonAncestorContainer) || !range.toString().trim()) return hide()
     const rect = range.getBoundingClientRect()
     if (rect.width === 0 && rect.height === 0) return hide()
+    pendingRange.current = range.cloneRange()
     setToolbar({ x: rect.left + rect.width / 2, y: rect.top, mode: 'add' })
   }, [hide])
 
   const applyHighlight = useCallback(() => {
     const root = rootRef.current
-    const selection = window.getSelection()
-    if (!root || !selection || selection.rangeCount === 0) return
-    if (highlightRange(selection.getRangeAt(0), root)) setCount((n) => n + 1)
-    selection.removeAllRanges()
+    const range = pendingRange.current
+    if (!root || !range) return
+    if (highlightRange(range, root)) setCount((n) => n + 1)
+    pendingRange.current = null
+    window.getSelection()?.removeAllRanges()
     hide()
   }, [hide])
 
@@ -215,18 +222,28 @@ export function PassageReader({ html, className }: { html: string; className?: s
             <button
               type="button"
               onClick={applyHighlight}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-navy-800 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg transition hover:bg-navy-700"
+              // On touch, fire on touchend and suppress the synthetic click so the
+              // tap is not swallowed by the browser dismissing the selection first.
+              onTouchEnd={(e) => {
+                e.preventDefault()
+                applyHighlight()
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-navy-800 px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-navy-700"
             >
-              <Highlighter className="h-3.5 w-3.5 text-amber-300" aria-hidden />
+              <Highlighter className="h-4 w-4 text-amber-300" aria-hidden />
               Highlight
             </button>
           ) : (
             <button
               type="button"
               onClick={applyRemove}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-navy-800 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg transition hover:bg-navy-700"
+              onTouchEnd={(e) => {
+                e.preventDefault()
+                applyRemove()
+              }}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-navy-800 px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-navy-700"
             >
-              <Eraser className="h-3.5 w-3.5 text-amber-300" aria-hidden />
+              <Eraser className="h-4 w-4 text-amber-300" aria-hidden />
               Remove
             </button>
           )}
