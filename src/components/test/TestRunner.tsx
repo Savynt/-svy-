@@ -252,7 +252,7 @@ export function TestRunner({ task }: { task: RunnerTask }) {
     <div className="min-h-screen bg-sky-50 pb-28">
       {/* Sticky exam header with timer */}
       <header className="sticky top-0 z-30 border-b border-navy-100 bg-white/95 backdrop-blur">
-        <div className="container-app flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
+        <div className="container-app max-w-[92rem] flex flex-wrap items-center gap-x-4 gap-y-2 py-3">
           <Button href="/practice" variant="ghost" size="sm" className="hidden sm:inline-flex">
             <ChevronLeft className="h-4 w-4" /> Exit
           </Button>
@@ -288,7 +288,9 @@ export function TestRunner({ task }: { task: RunnerTask }) {
         </div>
       </header>
 
-      <div className="container-app pt-6">
+      {/* Wider than the app default: a reading passage and its questions have to
+          sit side by side without either turning into a narrow column. */}
+      <div className="container-app max-w-[92rem] pt-6">
         {/* Result banner */}
         {result && <ResultBanner result={result} track={task.track} />}
 
@@ -353,12 +355,14 @@ export function TestRunner({ task }: { task: RunnerTask }) {
         <div
           className={cn(
             'grid gap-6',
-            hasPassage ? 'lg:grid-cols-2' : 'lg:grid-cols-1',
+            // The passage gets the larger share: it is read continuously, while
+            // the answer column only holds short inputs.
+            hasPassage ? 'lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]' : 'lg:grid-cols-1',
           )}
         >
           {/* Passage / audio column */}
           {(hasPassage || hasAudio) && (
-            <div className="lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+            <div className="lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
               {hasAudio && (
                 <Card className="mb-4">
                   <CardBody>
@@ -397,7 +401,11 @@ export function TestRunner({ task }: { task: RunnerTask }) {
                       <h2 className="font-display text-sm font-bold text-navy-800">Passage</h2>
                     </div>
                     <div
-                      className="prose-passage space-y-3 text-sm leading-relaxed text-navy-700 [&_h2]:font-display [&_h2]:text-base [&_h2]:font-bold [&_h2]:text-navy-800 [&_p]:mb-3 [&_strong]:text-navy-800"
+                      // `selection:` gives dragged-over text a highlighter look
+                      // instead of the browser's default blue — readers mark up
+                      // the passage as they hunt for answers, and the amber wash
+                      // stays legible over the body text.
+                      className="prose-passage space-y-3 text-[0.9375rem] leading-7 text-navy-700 selection:bg-amber-200 selection:text-navy-900 [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-navy-800 [&_h3]:font-display [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-navy-800 [&_p]:mb-4 [&_strong]:text-navy-800"
                       // Passage HTML is authored/moderated content from the DB.
                       dangerouslySetInnerHTML={{ __html: task.passageHtml ?? '' }}
                     />
@@ -511,7 +519,7 @@ export function TestRunner({ task }: { task: RunnerTask }) {
       {/* Sticky submit bar (pre-submit) */}
       {!submitted && totalQuestions > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-navy-100 bg-white/95 backdrop-blur">
-          <div className="container-app flex items-center justify-between gap-3 py-3">
+          <div className="container-app max-w-[92rem] flex items-center justify-between gap-3 py-3">
             <div className="min-w-0">
               {error ? (
                 <p className="flex items-center gap-1.5 text-sm font-medium text-rose-600">

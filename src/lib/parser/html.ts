@@ -53,13 +53,17 @@ export function parseHtmlTask(html: string, filename: string): ParseResult {
     // Prefer the CONFIG family — it is the most reliable, fully-structured form.
     const config = extractConfig(scriptText)
     const built = config
-      ? buildFromConfig(config, { slug, title, skill, warnings })
+      ? buildFromConfig(config, root, { slug, title, skill, warnings })
       : buildFromDom(root, scriptText, { slug, title, skill, warnings })
 
     if (!built) {
       errors.push('No recognisable questions or passage could be extracted.')
       return { ok: false, source, warnings, errors }
     }
+
+    inferSectionLetterBanks(built)
+    stripLeadingQuestionNumbers(built)
+    trimQuestionsFromInstructions(built)
 
     if (built.groups.length === 0) {
       warnings.push('No question groups were detected.')
@@ -74,6 +78,122 @@ export function parseHtmlTask(html: string, filename: string): ParseResult {
     // Defensive: parsing should never crash the batch importer.
     errors.push(`Unexpected parser failure: ${errorMessage(err)}`)
     return { ok: false, source, warnings, errors }
+  }
+}
+
+/**
+ * Drop the question number from the start of a prompt.
+ *
+ * Source pages print the number inside the question text ("27 Resident killer
+ * whales appear to…") because they have no separate numbering. The player draws
+ * its own number, so keeping it produces "27 / 27 Resident killer whales…" —
+ * the same number twice, once as the label and once as the first word.
+ *
+ * Only a number that matches the question's own is removed; a prompt that
+ * genuinely opens with a different figure ("1953 saw the first…") is left alone.
+ */
+function stripLeadingQuestionNumbers(task: NormalizedTask): void {
+  for (const group of task.groups) {
+    for (const question of group.questions) {
+      const numbered = question.data?.numbered
+      if (typeof numbered !== 'number') continue
+      const prompt = question.prompt
+      const stripped = prompt.replace(
+        new RegExp(`^\\s*${numbered}\\s*[.)\\]:–-]?\\s+`),
+        '',
+      )
+      // Never strip the whole prompt away — a prompt that is only its number
+      // is a placeholder, and losing it would hide that defect from the audit.
+      if (stripped && stripped !== prompt) question.prompt = stripped
+    }
+  }
+}
+
+/**
+ * Cut the questions back out of a group's instruction.
+ *
+ * Several pages put the rubric and the whole numbered statement list in one
+ * block ("…write YES if the statement agrees… 32 The DOC project… 33 Parasite
+ * infections…"), which the walker keeps as the instruction *and* then extracts
+ * again as individual questions. The learner reads every statement twice: once
+ * in a wall of text above, once as the actual question.
+ *
+ * We cut the instruction at the first point where a question's own text starts.
+ */
+function trimQuestionsFromInstructions(task: NormalizedTask): void {
+  /** Enough of a prompt to match on without tripping over stray punctuation. */
+  const PROBE_LENGTH = 30
+
+  for (const group of task.groups) {
+    const instruction = group.instruction
+    if (!instruction) continue
+
+    let cut = -1
+    for (const question of group.questions) {
+      const probe = question.prompt.slice(0, PROBE_LENGTH).trim()
+      if (probe.length < 12) continue
+      const at = instruction.indexOf(probe)
+      if (at > 0 && (cut === -1 || at < cut)) cut = at
+    }
+    if (cut === -1) continue
+
+    // The question's number sits just before its text — drop it with the rest.
+    const kept = instruction.slice(0, cut).replace(/\s*\d+\s*$/, '').trim()
+
+    // Refuse to leave the group with no rubric at all: an instruction that is
+    // *entirely* questions is a grouping defect for the audit to report, not
+    // something to silently blank out.
+    if (kept.length >= 20) group.instruction = kept
+  }
+}
+
+/**
+ * Give "which section contains the following information?" groups their bank.
+ *
+ * These tasks never list their choices: the options *are* the passage's own
+ * section letters, and the rubric states the range in prose ("Reading Passage 2
+ * has eight sections, A–H"). Without a bank the player renders a matching
+ * question with an empty dropdown, so we read the range out of the instruction
+ * and build the bank the page assumed the reader would infer.
+ *
+ * Applied conservatively: only to matching groups that have no bank already and
+ * whose every answer is a single letter inside the stated range — if the answers
+ * disagree with the rubric, the rubric is not describing this group.
+ */
+function inferSectionLetterBanks(task: NormalizedTask): void {
+  const RANGE = /\b(sections?|paragraphs?)\b[^.]{0,40}?\b([A-Z])\s*[-–—]\s*([A-Z])\b/i
+
+  for (const group of task.groups) {
+    if (group.type !== 'MATCHING') continue
+    const data = (group.data ?? {}) as Record<string, unknown>
+    const already = ['options', 'matches', 'bank'].some(
+      (k) => Array.isArray(data[k]) && (data[k] as unknown[]).length > 0,
+    )
+    if (already) continue
+    if (group.questions.some((q) => Array.isArray(q.data?.options))) continue
+
+    const match = RANGE.exec(group.instruction ?? '')
+    if (!match) continue
+
+    const noun = match[1].toLowerCase().startsWith('section') ? 'Section' : 'Paragraph'
+    const from = match[2].toUpperCase().charCodeAt(0)
+    const to = match[3].toUpperCase().charCodeAt(0)
+    if (to <= from || to - from > 15) continue
+
+    const letters: string[] = []
+    for (let c = from; c <= to; c++) letters.push(String.fromCharCode(c))
+
+    const answersFit = group.questions.every((q) => {
+      const a = q.answer
+      return typeof a === 'string' && letters.includes(a.trim().toUpperCase())
+    })
+    if (!answersFit) continue
+
+    const options = letters.map((letter) => ({ key: letter, text: `${noun} ${letter}` }))
+    group.data = { ...data, options }
+    for (const question of group.questions) {
+      question.data = { ...(question.data ?? {}), options }
+    }
   }
 }
 
@@ -108,10 +228,30 @@ function baseTask(ctx: BuildContext, source: string): NormalizedTask {
 
 interface ConfigItem {
   id?: number | string
+  // The question text. Page authors disagree on the field name — see
+  // {@link configItemPrompt} for the order we read them in.
   prompt?: string
+  text?: string
+  stem?: string
+  statement?: string
+  question?: string
+  paragraph?: string
+  para?: string
+  q?: string
+  // Per-question choice bank. Multiple-choice sections often give each item its
+  // own A–D options instead of sharing one bank across the section.
+  options?: ConfigBank
   correct?: unknown
   answer?: unknown
 }
+
+/**
+ * A bank of labelled choices. Seen in the wild as a list of `{key,text}` pairs,
+ * a list of bare strings, or a key→text map.
+ */
+type ConfigBank =
+  | Array<{ key?: string; text?: string } | string | [string, string]>
+  | Record<string, string>
 
 interface ConfigSection {
   type?: string
@@ -119,11 +259,64 @@ interface ConfigSection {
   title?: string
   instructions?: unknown
   instruction?: unknown
-  headingsList?: Array<{ key?: string; text?: string }>
-  options?: Array<{ key?: string; text?: string }>
+  stem?: string
+  headingsList?: ConfigBank
+  headings?: ConfigBank
+  // The shared choice bank. `endings` (sentence completion) and `wordlist`
+  // (word-box tasks) are the same thing under a task-specific name.
+  options?: ConfigBank
+  endings?: ConfigBank
+  wordlist?: ConfigBank
+  list?: ConfigBank
+  bank?: ConfigBank
   items?: ConfigItem[]
   correct?: unknown
   answer?: unknown
+}
+
+/** Section fields that are never a choice bank, whatever shape they take. */
+const NON_BANK_FIELDS: ReadonlySet<string> = new Set([
+  'type',
+  'heading',
+  'title',
+  'instruction',
+  'instructions',
+  'items',
+  'correct',
+  'answer',
+  'stem',
+  'why',
+  'explanations',
+  'headings',
+  'headingsList',
+])
+
+/**
+ * The section's shared choice bank, whatever the page calls it.
+ *
+ * Beyond the names we know, authors label the bank after its contents —
+ * `people`, `endings`, `researchers`, `theories`. Rather than chase the
+ * vocabulary, fall back to recognising the *shape*: a map from single-letter
+ * keys (A, B, C…) to text is a labelled choice bank and nothing else.
+ */
+function sectionOptions(sec: ConfigSection): ConfigBank | undefined {
+  const named = sec.options ?? sec.endings ?? sec.wordlist ?? sec.list ?? sec.bank
+  if (named) return named
+
+  for (const [field, value] of Object.entries(sec)) {
+    if (NON_BANK_FIELDS.has(field)) continue
+    if (looksLikeLetterBank(value)) return value as ConfigBank
+  }
+  return undefined
+}
+
+function looksLikeLetterBank(value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const entries = Object.entries(value as Record<string, unknown>)
+  if (entries.length < 2) return false
+  return entries.every(
+    ([key, text]) => /^[A-Za-z]$/.test(key) && typeof text === 'string' && text.trim() !== '',
+  )
 }
 
 interface ConfigShape {
@@ -137,6 +330,7 @@ interface ConfigShape {
 
 function buildFromConfig(
   config: ConfigShape,
+  root: HTMLElement,
   ctx: BuildContext,
 ): NormalizedTask | null {
   const sections = Array.isArray(config.sections) ? config.sections : []
@@ -164,14 +358,10 @@ function buildFromConfig(
     const instruction = configInstruction(sec)
     const data: Record<string, unknown> = {}
 
-    const headingsBank = asArray(sec.headingsList)
-      .filter((h) => h && (h.key || h.text))
-      .map((h) => ({ key: String(h.key ?? ''), text: cleanText(h.text ?? '') }))
+    const headingsBank = configBank(sec.headingsList ?? sec.headings, 'roman')
     if (headingsBank.length > 0) data.headings = headingsBank
 
-    const optionBank = asArray(sec.options)
-      .filter((o) => o && (o.key || o.text))
-      .map((o) => ({ key: String(o.key ?? ''), text: cleanText(o.text ?? '') }))
+    const optionBank = configBank(sectionOptions(sec), 'letter')
     if (optionBank.length > 0) data.options = optionBank
 
     const questions: NormalizedQuestion[] = []
@@ -181,16 +371,23 @@ function buildFromConfig(
       let order = 0
       for (const item of items) {
         const answer = normaliseAnswer(item.correct ?? item.answer)
+        const promptText = configItemPrompt(item)
         if (answer === undefined) {
           ctx.warnings.push(
-            `Question ${item.id ?? order + 1} ("${truncate(item.prompt ?? '')}") has no answer key.`,
+            `Question ${item.id ?? order + 1} ("${truncate(promptText)}") has no answer key.`,
           )
         }
+        if (!promptText) {
+          ctx.warnings.push(`Question ${item.id ?? order + 1} has no prompt text.`)
+        }
+        // Per-item options win over the section bank: multiple-choice sections
+        // give each question its own A–D list, and only the item knows it.
+        const itemBank = configBank(item.options, 'letter')
         questions.push({
           order: order++,
           type,
-          prompt: cleanText(item.prompt ?? `Question ${item.id ?? order}`),
-          data: questionData(type, optionBank, headingsBank),
+          prompt: promptText || `Question ${item.id ?? order}`,
+          data: questionData(type, itemBank.length > 0 ? itemBank : optionBank, headingsBank),
           answer: answer ?? '',
           points: 1,
         })
@@ -201,10 +398,13 @@ function buildFromConfig(
       if (answer === undefined) {
         ctx.warnings.push(`Section "${instruction || type}" has no answer key.`)
       }
+      // The question itself lives in `stem` on these sections; the heading is
+      // only the "Questions 12–13 — choose TWO letters" rubric.
+      const stem = cleanText(sec.stem ?? '')
       questions.push({
         order: 0,
         type,
-        prompt: instruction || 'Choose the correct option(s).',
+        prompt: stem || instruction || 'Choose the correct option(s).',
         data: questionData(type, optionBank, headingsBank),
         answer: answer ?? [],
         points: Array.isArray(answer) ? answer.length : 1,
@@ -221,42 +421,181 @@ function buildFromConfig(
   }
 
   task.groups = groups
-  task.passageHtml = extractConfigPassage(config) ?? task.passageHtml
+  task.passageHtml =
+    extractConfigPassage(config) ?? extractConfigDomPassage(root) ?? task.passageHtml
+  if (!task.passageHtml) {
+    ctx.warnings.push('No reading passage was found (CONFIG carried none and the DOM had none).')
+  }
   return task
 }
 
+/**
+ * CONFIG `type` strings, folded to a canonical QuestionType.
+ *
+ * There is no shared vocabulary in the corpus — the same task type appears as
+ * `tfng`, `tfn`, `tfn3`, `tf` and `true_false`. Keys here are already normalised
+ * (lower-cased, separators stripped), so `multi_choice`, `multi-choice` and
+ * `multichoice` all arrive as `multichoice`.
+ */
+const CONFIG_TYPE_ALIASES: Readonly<Record<string, QuestionType>> = {
+  // Matching headings to paragraphs.
+  headings: 'MATCHING_HEADINGS',
+  headingmatch: 'MATCHING_HEADINGS',
+  paragraphheadings: 'MATCHING_HEADINGS',
+  // Pick several answers from one bank.
+  msq: 'MULTI_SELECT',
+  multiselect: 'MULTI_SELECT',
+  twoletters: 'MULTI_SELECT',
+  twopick: 'MULTI_SELECT',
+  three: 'MULTI_SELECT',
+  multiplechoicetwo: 'MULTI_SELECT',
+  // Pick one answer.
+  mcq: 'MULTIPLE_CHOICE',
+  mcqsingle: 'MULTIPLE_CHOICE',
+  multiple: 'MULTIPLE_CHOICE',
+  multiplechoice: 'MULTIPLE_CHOICE',
+  multichoice: 'MULTIPLE_CHOICE',
+  // Match items to a bank (paragraph letters, names, sentence endings…).
+  matching: 'MATCHING',
+  match: 'MATCHING',
+  matchlist: 'MATCHING',
+  matchtorch: 'MATCHING',
+  endings: 'MATCHING',
+  classify: 'MATCHING',
+  names: 'MATCHING',
+  locate: 'MATCHING',
+  section: 'MATCHING',
+  sectionmatch: 'MATCHING',
+  sectionmatching: 'MATCHING',
+  para: 'MATCHING',
+  wordlist: 'MATCHING',
+  // Verdict scales.
+  tfng: 'TRUE_FALSE_NOTGIVEN',
+  tfn: 'TRUE_FALSE_NOTGIVEN',
+  tfn3: 'TRUE_FALSE_NOTGIVEN',
+  tf: 'TRUE_FALSE_NOTGIVEN',
+  truefalse: 'TRUE_FALSE_NOTGIVEN',
+  ynng: 'YES_NO_NOTGIVEN',
+  yn: 'YES_NO_NOTGIVEN',
+  yesno: 'YES_NO_NOTGIVEN',
+  // Typed answers with a fixed sub-type.
+  summary: 'SUMMARY_COMPLETION',
+  summarycompletion: 'SUMMARY_COMPLETION',
+  sentencecompletion: 'SENTENCE_COMPLETION',
+  sentencecompletionfill: 'SENTENCE_COMPLETION',
+  notes: 'NOTE_COMPLETION',
+  notescompletion: 'NOTE_COMPLETION',
+  boxfill: 'NOTE_COMPLETION',
+  diagram: 'LABELLING',
+  short: 'SHORT_ANSWER',
+  shortanswer: 'SHORT_ANSWER',
+}
+
+/** Section types whose exact completion flavour is read from the instruction. */
+const CONFIG_COMPLETION_TYPES: ReadonlySet<string> = new Set([
+  'gap',
+  'gapfill',
+  'fill',
+  'completion',
+])
+
 function configSectionType(sec: ConfigSection): QuestionType {
-  const raw = (sec.type ?? '').toString().toLowerCase()
+  const raw = (sec.type ?? '').toString().toLowerCase().replace(/[^a-z0-9]/g, '')
   const instruction = configInstruction(sec)
-  switch (raw) {
-    case 'headings':
-      return 'MATCHING_HEADINGS'
-    case 'msq':
-    case 'multiselect':
-    case 'multi-select':
-      return 'MULTI_SELECT'
-    case 'mcq':
-    case 'multiple':
-    case 'multiple-choice':
-      return 'MULTIPLE_CHOICE'
-    case 'matching':
-    case 'match':
-      return 'MATCHING'
-    case 'tfng':
-      return 'TRUE_FALSE_NOTGIVEN'
-    case 'ynng':
-      return 'YES_NO_NOTGIVEN'
-    case 'gap':
-    case 'completion':
-    case 'fill':
-      return completionType(instruction)
-    case 'short':
-    case 'shortanswer':
-      return 'SHORT_ANSWER'
-    default:
-      // Fall back to instruction-based detection.
-      return detectTypeFromInstruction(instruction, sec.options?.length ?? 0)
+
+  const alias = CONFIG_TYPE_ALIASES[raw]
+  if (alias) return alias
+  if (CONFIG_COMPLETION_TYPES.has(raw)) return completionType(instruction)
+
+  // Unknown label — fall back to instruction-based detection.
+  return detectTypeFromInstruction(instruction, configBank(sec.options, 'letter').length)
+}
+
+/**
+ * The question text, whatever the page author decided to call the field.
+ *
+ * `text` is actually the most common name in the corpus (TRUE/FALSE statements
+ * and matching-headings paragraphs use it), and reading only `prompt` is why
+ * those questions used to reach the player labelled "Question 7" with the
+ * statement itself missing.
+ */
+function configItemPrompt(item: ConfigItem): string {
+  for (const raw of [
+    item.prompt,
+    item.text,
+    item.stem,
+    item.statement,
+    item.question,
+    item.paragraph,
+    item.para,
+    item.q,
+  ]) {
+    if (typeof raw === 'string' && raw.trim()) return cleanText(raw)
   }
+  return ''
+}
+
+/**
+ * Read a choice bank written either as a list (`[{key,text}]` / `["a","b"]`) or
+ * as a key→text map (`{A:"food", B:"energy"}`) — the map form is the majority in
+ * this corpus, and treating it as an array is why those questions used to render
+ * with nothing to pick from.
+ *
+ * Entries with no key of their own are numbered by position: A, B, C… for plain
+ * option banks, i, ii, iii… for matching-headings banks (the IELTS convention).
+ */
+function configBank(
+  raw: ConfigBank | undefined,
+  keyStyle: 'letter' | 'roman',
+): Array<{ key: string; text: string }> {
+  const autoKey = (i: number): string =>
+    keyStyle === 'roman' ? romanKey(i + 1) : String.fromCharCode(65 + i)
+
+  const entries: Array<{ key: string; text: string }> = []
+  if (Array.isArray(raw)) {
+    raw.forEach((o, i) => {
+      if (typeof o === 'string') {
+        if (o.trim()) entries.push({ key: autoKey(i), text: cleanText(o) })
+        return
+      }
+      // `[["A","should improve by itself"], …]` — the sentence-endings dialect.
+      if (Array.isArray(o)) {
+        const [key, text] = o
+        if (typeof text === 'string' && text.trim()) {
+          entries.push({ key: String(key ?? autoKey(i)), text: cleanText(text) })
+        }
+        return
+      }
+      if (!o || (!o.key && !o.text)) return
+      entries.push({ key: String(o.key ?? autoKey(i)), text: cleanText(o.text ?? '') })
+    })
+  } else if (raw && typeof raw === 'object') {
+    for (const [key, text] of Object.entries(raw)) {
+      if (typeof text !== 'string' || !text.trim()) continue
+      entries.push({ key, text: cleanText(text) })
+    }
+  }
+  return entries.filter((e) => e.key !== '' && e.text !== '')
+}
+
+/** 1 → "i", 4 → "iv", 10 → "x" — matching-headings keys. */
+function romanKey(n: number): string {
+  const table: ReadonlyArray<readonly [number, string]> = [
+    [10, 'x'],
+    [9, 'ix'],
+    [5, 'v'],
+    [4, 'iv'],
+    [1, 'i'],
+  ]
+  let out = ''
+  let rem = n
+  for (const [value, symbol] of table) {
+    while (rem >= value) {
+      out += symbol
+      rem -= value
+    }
+  }
+  return out
 }
 
 function configInstruction(sec: ConfigSection): string {
@@ -276,6 +615,25 @@ function extractConfigPassage(config: ConfigShape): string | undefined {
   const raw = config.passageHtml ?? config.passage
   if (typeof raw === 'string' && raw.trim()) return raw.trim()
   return undefined
+}
+
+/**
+ * CONFIG pages carry the *questions* in the JS object but usually leave the
+ * reading passage as ordinary server-rendered DOM — only the question area
+ * (`#qroot`) is built client-side. Without this fallback such a task lands in
+ * the player with questions and nothing to read.
+ *
+ * `#passage` is tried before the generic scan because on these pages the outer
+ * `.passage` card also wraps the (empty) `#title` / `#subtitle` placeholders
+ * that CONFIG fills in — data we already read from CONFIG itself.
+ */
+function extractConfigDomPassage(root: HTMLElement): string | undefined {
+  const inner = root.querySelector('#passage')
+  if (inner) {
+    const html = sanitisePassage(inner)
+    if (html && plainLength(html) > 120) return html
+  }
+  return extractPassageHtml(root)
 }
 
 // ---------------------------------------------------------------------------
@@ -468,10 +826,7 @@ function parseLooseInput(
   const id = input.getAttribute('id') ?? input.getAttribute('name') ?? ''
   const num = questionNumberFrom(id)
   if (tag === 'select') {
-    const options = input
-      .querySelectorAll('option')
-      .map((o) => cleanText(o.text))
-      .filter((t) => t && !/^select answer$/i.test(t))
+    const options = selectOptionTexts(input)
     const type = detectChoiceType(options)
     return {
       order: 0,
@@ -607,10 +962,7 @@ function parseSelectQuestion(
 ): NormalizedQuestion {
   const id = select.getAttribute('id') ?? select.getAttribute('name') ?? ''
   const num = questionNumberFrom(id)
-  const options = select
-    .querySelectorAll('option')
-    .map((o) => cleanText(o.text))
-    .filter((t) => t && !/^select answer$/i.test(t))
+  const options = selectOptionTexts(select)
   const type = detectChoiceType(options)
   const prompt = promptForInput(block, select, num)
   return {
@@ -1053,6 +1405,24 @@ function detectSkill(
   return 'READING'
 }
 
+/** Placeholder entries a `<select>` opens with — never real answers. */
+const PLACEHOLDER_OPTION = /^(?:[-–—.\s]*|select(?:\s+answer)?|choose|choose\s+one|please\s+select)$/i
+
+/**
+ * The real choices in a dropdown.
+ *
+ * The leading `<option value="">--</option>` is a prompt to the user, not an
+ * answer; leaving it in put a dash (or the word "Select") into the bank as if it
+ * were something a learner could correctly pick.
+ */
+function selectOptionTexts(select: HTMLElement): string[] {
+  return select
+    .querySelectorAll('option')
+    .filter((o) => (o.getAttribute('value') ?? cleanText(o.text)).trim() !== '')
+    .map((o) => cleanText(o.text))
+    .filter((t) => t && !PLACEHOLDER_OPTION.test(t))
+}
+
 function detectChoiceType(options: string[]): QuestionType {
   const upper = options.map((o) => o.toUpperCase().trim())
   const set = new Set(upper)
@@ -1212,9 +1582,83 @@ function promptForInput(
   // For completion blanks we use the surrounding paragraph text so the player
   // can show where the blank sits within the sentence/note.
   const para = input.closest('p') ?? block
+
+  const shared = promptForSharedParagraph(para, input)
+  if (shared) return shared
+
   const text = promptTextOf(para)
   if (text) return text
+
+  const climbed = promptFromAncestors(input)
+  if (climbed) return climbed
+
   return num !== undefined ? `Question ${num}` : 'Complete the blank.'
+}
+
+/**
+ * Prompt for one blank in a paragraph that holds several of them.
+ *
+ * Summary/note-completion tasks put a whole paragraph of prose with four or
+ * five gaps in it into a single `<p>`. Handing every gap the same paragraph
+ * text gave the learner N identical-looking questions with no way to tell which
+ * gap each one meant. Instead each question gets the paragraph with *its* gap
+ * marked `_____` and the other gaps reduced to `…`, which both reads naturally
+ * and is necessarily distinct per question.
+ *
+ * Returns '' when the paragraph holds one blank or none — the caller's simpler
+ * whole-paragraph path is right in that case.
+ */
+function promptForSharedParagraph(para: HTMLElement, input: HTMLElement): string {
+  const blanks = para.querySelectorAll('input, select')
+  if (blanks.length < 2) return ''
+
+  const parts: string[] = []
+  const walk = (node: HTMLElement): void => {
+    for (const child of node.childNodes) {
+      const el = child as HTMLElement
+      const tag = (el.rawTagName ?? '').toLowerCase()
+      if (tag === 'input' || tag === 'select') {
+        parts.push(el === input ? ' _____ ' : ' … ')
+        continue
+      }
+      if (el.childNodes && el.childNodes.length > 0) {
+        walk(el)
+        continue
+      }
+      const text = el.text ?? ''
+      if (text) parts.push(text)
+    }
+  }
+  walk(para)
+
+  const joined = cleanText(parts.join(''))
+  return joined.includes('_____') ? joined : ''
+}
+
+/**
+ * Walk up from a control looking for the question text.
+ *
+ * Some pages nest the control one level deeper than the sentence it belongs to
+ * (`<div class="true-false-option"><p>1 The statement…</p><div
+ * class="true-false-option"><select>…`), so the control's own block holds only
+ * the dropdown and the statement would otherwise be lost — the learner gets a
+ * TRUE/FALSE picker with nothing to judge.
+ *
+ * Bounded deliberately: at most three levels, and any candidate longer than
+ * `MAX_CLIMBED_PROMPT` is rejected as the surrounding rubric ("Questions 1–4 Do
+ * the following statements agree…") rather than a question.
+ */
+const MAX_CLIMBED_PROMPT = 400
+
+function promptFromAncestors(input: HTMLElement): string {
+  let node = input.parentNode
+  for (let depth = 0; depth < 3 && node; depth++) {
+    const text = promptTextOf(node)
+    if (text && text.length <= MAX_CLIMBED_PROMPT) return text
+    if (text.length > MAX_CLIMBED_PROMPT) return ''
+    node = node.parentNode
+  }
+  return ''
 }
 
 /**
@@ -1340,11 +1784,6 @@ function collectScriptText(root: HTMLElement): string {
     .querySelectorAll('script')
     .map((s) => s.text)
     .join('\n')
-}
-
-/** Coerce a possibly-missing/non-array CONFIG field into a typed array. */
-function asArray<T>(value: T[] | undefined): T[] {
-  return Array.isArray(value) ? value : []
 }
 
 /**

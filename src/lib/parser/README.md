@@ -100,6 +100,24 @@ SUMMARY_COMPLETION`, `table → TABLE_COMPLETION`, `sentence → SENTENCE_COMPLE
   collapse to the first canonical form; short all-letter arrays stay as multi-answers;
   boolean checkbox flags are resolved to their option letters, not kept as `true`.
 
+## Parsing is not the same as publishable
+
+`scripts/audit-reading.ts` is the gate between the two. A task can parse and pass
+`normalizedTaskSchema` while still being impossible to sit: a TRUE/FALSE picker whose
+statement was lost, a "choose TWO letters" question with no letters, a group whose
+rubric promises seven questions when five were extracted, or an instruction that
+restates the questions above the questions. The audit checks exactly those things and
+reports every defect it finds:
+
+```
+npx tsx scripts/audit-reading.ts [parsedDir] --copy-clean <dir> --limit 50
+```
+
+`--copy-clean` writes only the defect-free tasks (de-duplicated by passage, ordered to
+favour rarer question types) so `scripts/seed-tasks.ts` can be pointed straight at it.
+`auditTask` is also exported, so the same checks can be run against what actually
+landed in the database rather than against the parser's output.
+
 ## Known limitations
 
 - **Single accepted answer kept.** When the source lists several acceptable spellings
@@ -109,8 +127,10 @@ SUMMARY_COMPLETION`, `table → TABLE_COMPLETION`, `sentence → SENTENCE_COMPLE
   nor an array under the group number resolve to an empty answer (a warning is logged).
   This affects a small share of listening "choose N from a box" items.
 - **Prompts are plain text.** Completion prompts carry the surrounding sentence as text
-  (dropdown option noise stripped) but no inline blank marker — the player renders the
-  blank from question order/position.
+  (dropdown option noise stripped). When one paragraph holds several blanks, each
+  question gets that paragraph with *its* blank marked `_____` and the others reduced
+  to `…`, so the questions are distinguishable; a lone blank has no inline marker and
+  the player renders it from question order/position.
 - **No audio bytes.** Listening `audioUrl` is taken from `<audio src>` / `<source src>`
   when present; many pages reference an empty/`audioFiles=[]` player, so `audioUrl` is
   often absent (a warning is logged). Transcripts are not extracted.
