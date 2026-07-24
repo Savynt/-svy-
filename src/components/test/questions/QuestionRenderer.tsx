@@ -75,27 +75,69 @@ interface QuestionRendererProps {
 
 /* ------------------------------- data helpers ------------------------------ */
 
+/**
+ * A label that carries its own key: "A) forage grass", "B. rice fields",
+ * "iii — the forest and its inhabitants". Sources write the key into the option
+ * *text* as often as into a separate field, and when it lands in `key` the badge
+ * shows the whole sentence. Split it back apart so the badge stays a badge and
+ * the stored answer ("D") still matches.
+ */
+const LABELLED_OPTION = /^\s*([A-Za-z]|[ivxIVX]{1,4}|\d{1,2})\s*[).:—–-]\s+([\s\S]*)$/
+
+/** Peel a leading key off a label, returning the key and the remaining text. */
+function splitLabelledOption(raw: string): { key: string | null; text: string } {
+  const m = LABELLED_OPTION.exec(raw)
+  if (!m || !m[2].trim()) return { key: null, text: raw.trim() }
+  return { key: m[1], text: m[2].trim() }
+}
+
 function readOptions(data: Record<string, unknown> | null): RunnerOption[] {
   if (!data) return []
   const raw = data.options
   if (!Array.isArray(raw)) return []
   return raw
     .map((o, i): RunnerOption | null => {
-      if (typeof o === 'string') return { key: String.fromCharCode(65 + i), text: o }
+      const fallbackKey = String.fromCharCode(65 + i)
+      if (typeof o === 'string') {
+        const split = splitLabelledOption(o)
+        return { key: split.key ?? fallbackKey, text: split.text }
+      }
       if (o && typeof o === 'object') {
         const rec = o as Record<string, unknown>
-        let key = typeof rec.key === 'string' ? rec.key : String.fromCharCode(65 + i)
-        const text = typeof rec.text === 'string' ? rec.text : typeof rec.label === 'string' ? rec.label : key
-        // Normalise composite keys like "A — Provine" or "B — Zimmerman" → "A", "B".
-        // The parser sometimes stores the full option label as the key; stripping the
-        // name suffix fixes badge overflow and answer-key matching (server stores "B").
-        const compositeMatch = /^([A-Za-z0-9]{1,4})\s*[—–-]/.exec(key)
-        if (compositeMatch) key = compositeMatch[1]
+        const rawKey = typeof rec.key === 'string' ? rec.key : ''
+        const rawText =
+          typeof rec.text === 'string' ? rec.text : typeof rec.label === 'string' ? rec.label : ''
+        // The key field may hold the entire labelled option ("A) forage grass");
+        // in that case it is the only place the option text exists.
+        const fromKey = splitLabelledOption(rawKey)
+        const fromText = splitLabelledOption(rawText)
+        const key = fromKey.key ?? (rawKey && rawKey.length <= 4 ? rawKey : null) ?? fromText.key ?? fallbackKey
+        const text = fromText.text || fromKey.text || rawKey || key
         return { key, text }
       }
       return null
     })
     .filter((o): o is RunnerOption => o !== null)
+}
+
+/**
+ * TRUE/FALSE/NOT GIVEN and YES/NO/NOT GIVEN questions reach us typed as plain
+ * multiple choice often enough that we cannot trust `type` alone. Rendered as
+ * choice rows they become three cards with "NOT GIVEN" crammed into a 24px
+ * circle; rendered as verdict pills they look like the real exam. Detect the
+ * shape and route on that instead.
+ */
+const VERDICT_KEY = /^(YES|NO|TRUE|FALSE|NOT[\s_]?GIVEN|NG)$/i
+
+function asVerdictOptions(options: RunnerOption[]): RunnerOption[] | null {
+  if (options.length < 2 || options.length > 3) return null
+  if (!options.every((o) => VERDICT_KEY.test(o.key) || VERDICT_KEY.test(o.text))) return null
+  const canonical = (raw: string): RunnerOption => {
+    const k = raw.trim().toUpperCase().replace(/\s+/g, '_')
+    if (k === 'NG' || k === 'NOT_GIVEN') return { key: 'NOT_GIVEN', text: 'Not Given' }
+    return { key: k, text: k[0] + k.slice(1).toLowerCase() }
+  }
+  return options.map((o) => canonical(VERDICT_KEY.test(o.key) ? o.key : o.text))
 }
 
 /** Option bank shared via a group (headings, matching targets). */
@@ -122,12 +164,19 @@ export function readBank(
       return raw
         .map((o, i): RunnerOption | null => {
           if (typeof o === 'string') {
-            return { key: autoKey(i), text: o }
+            // "iii — the forest and its inhabitants" carries its own key; trust
+            // it over the positional fallback so the listed bank and the stored
+            // answer key agree.
+            const split = splitLabelledOption(o)
+            return { key: split.key ?? autoKey(i), text: split.text }
           }
           if (o && typeof o === 'object') {
             const rec = o as Record<string, unknown>
-            const key = typeof rec.key === 'string' && rec.key ? rec.key : autoKey(i)
-            const text = typeof rec.text === 'string' ? rec.text : ''
+            const rawKey = typeof rec.key === 'string' ? rec.key : ''
+            const rawText = typeof rec.text === 'string' ? rec.text : ''
+            const fromKey = splitLabelledOption(rawKey)
+            const key = fromKey.key ?? (rawKey && rawKey.length <= 4 ? rawKey : autoKey(i))
+            const text = rawText || fromKey.text
             return { key, text }
           }
           return null
@@ -245,15 +294,21 @@ function ChoiceRow({
         locked && 'cursor-not-allowed opacity-90',
       )}
     >
-      <span
-        className={cn(
-          'flex h-6 w-6 shrink-0 items-center justify-center border text-xs font-bold',
-          multi ? 'rounded-md' : 'rounded-full',
-          selected ? 'border-navy-600 bg-navy-600 text-white' : 'border-navy-300 text-navy-400',
-        )}
-      >
-        {badge ?? (selected ? '✓' : '')}
-      </span>
+      {/* A key is a key: one or two characters. Anything longer is an option
+          label that leaked into the key field, and squeezing it into a 24px
+          circle is what produced the unreadable "NOT GIVEN" bubbles — drop the
+          badge in that case rather than deform it. */}
+      {(badge == null || badge.length <= 3) && (
+        <span
+          className={cn(
+            'flex h-6 w-6 shrink-0 items-center justify-center border text-xs font-bold',
+            multi ? 'rounded-md' : 'rounded-full',
+            selected ? 'border-navy-600 bg-navy-600 text-white' : 'border-navy-300 text-navy-400',
+          )}
+        >
+          {badge ?? (selected ? '✓' : '')}
+        </span>
+      )}
       <span className="flex-1">{children}</span>
     </button>
   )
@@ -546,11 +601,16 @@ export function QuestionRenderer({
     case 'YES_NO_NOTGIVEN':
       control = <VerdictQuestion options={VERDICT_YNNG} value={value} onChange={onChange} locked={locked} />
       break
-    case 'MULTIPLE_CHOICE':
-      control = (
-        <ChoiceQuestion options={readOptions(data)} value={value} onChange={onChange} locked={locked} multi={false} />
+    case 'MULTIPLE_CHOICE': {
+      const options = readOptions(data)
+      const verdict = asVerdictOptions(options)
+      control = verdict ? (
+        <VerdictQuestion options={verdict} value={value} onChange={onChange} locked={locked} />
+      ) : (
+        <ChoiceQuestion options={options} value={value} onChange={onChange} locked={locked} multi={false} />
       )
       break
+    }
     case 'MULTI_SELECT':
       control = (
         <ChoiceQuestion options={readOptions(data)} value={value} onChange={onChange} locked={locked} multi />

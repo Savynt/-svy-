@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/Button'
 import { Card, CardBody } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { ProgressBar } from '@/components/ui/ProgressBar'
+import { PassageReader } from '@/components/test/PassageReader'
 import {
   QuestionRenderer,
   isSpeakingAnswer,
@@ -400,14 +401,9 @@ export function TestRunner({ task }: { task: RunnerTask }) {
                       <BookOpen className="h-4 w-4 text-navy-500" aria-hidden />
                       <h2 className="font-display text-sm font-bold text-navy-800">Passage</h2>
                     </div>
-                    <div
-                      // `selection:` gives dragged-over text a highlighter look
-                      // instead of the browser's default blue — readers mark up
-                      // the passage as they hunt for answers, and the amber wash
-                      // stays legible over the body text.
-                      className="prose-passage space-y-3 text-[0.9375rem] leading-7 text-navy-700 selection:bg-amber-200 selection:text-navy-900 [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-navy-800 [&_h3]:font-display [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-navy-800 [&_p]:mb-4 [&_strong]:text-navy-800"
-                      // Passage HTML is authored/moderated content from the DB.
-                      dangerouslySetInnerHTML={{ __html: task.passageHtml ?? '' }}
+                    <PassageReader
+                      html={task.passageHtml ?? ''}
+                      className="prose-passage space-y-3 text-[0.9375rem] leading-7 text-navy-700 [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold [&_h2]:text-navy-800 [&_h3]:font-display [&_h3]:text-base [&_h3]:font-bold [&_h3]:text-navy-800 [&_mark]:cursor-pointer [&_p]:mb-4 [&_strong]:text-navy-800"
                     />
                   </CardBody>
                 </Card>
@@ -471,22 +467,33 @@ export function TestRunner({ task }: { task: RunnerTask }) {
                   )}
 
                   <div className="space-y-6">
-                    {group.questions.map((q) => {
-                      const r = submitted ? resultById.get(q.id) : undefined
-                      return (
-                        <div key={q.id}>
-                          <QuestionRenderer
-                            question={q}
-                            value={answers[q.id]}
-                            onChange={(v) => setAnswer(q.id, v)}
-                            displayNumber={numberById.get(q.id) ?? q.order}
-                            locked={submitted}
-                            isCorrect={r ? r.isCorrect : undefined}
-                          />
-                          {r && <ResultFeedback result={r} userAnswer={answers[q.id]} />}
-                        </div>
-                      )
-                    })}
+                    {clozeTemplate(group) ? (
+                      <ClozeGroup
+                        group={group}
+                        answers={answers}
+                        setAnswer={setAnswer}
+                        numberById={numberById}
+                        submitted={submitted}
+                        resultById={resultById}
+                      />
+                    ) : (
+                      group.questions.map((q) => {
+                        const r = submitted ? resultById.get(q.id) : undefined
+                        return (
+                          <div key={q.id}>
+                            <QuestionRenderer
+                              question={q}
+                              value={answers[q.id]}
+                              onChange={(v) => setAnswer(q.id, v)}
+                              displayNumber={numberById.get(q.id) ?? q.order}
+                              locked={submitted}
+                              isCorrect={r ? r.isCorrect : undefined}
+                            />
+                            {r && <ResultFeedback result={r} userAnswer={answers[q.id]} />}
+                          </div>
+                        )
+                      })
+                    )}
                   </div>
                 </CardBody>
               </Card>
@@ -578,6 +585,148 @@ export function TestRunner({ task }: { task: RunnerTask }) {
         </div>
       )}
     </div>
+  )
+}
+
+/* ------------------------------ cloze summary ------------------------------ */
+
+/** Placeholder tokens the parser leaves in a shared-paragraph prompt. */
+const GAP_TOKEN = /_{3,}|\.\.\.|…/g
+
+/**
+ * A summary / notes group where every question is the *same* paragraph with a
+ * different blank filled in should render as one cloze passage with inline
+ * inputs — not as N cards each repeating the whole paragraph. This returns the
+ * ordered pieces of that paragraph when the group fits the pattern, or null.
+ *
+ * Each question's prompt carries its own blank as "_____" and the others as
+ * "…", so with every gap token flattened the prompts are identical — that
+ * sameness is the signal, and the flattened text is the template to split.
+ */
+function clozeTemplate(group: RunnerGroup): string[] | null {
+  const type = group.type
+  const isCompletion =
+    type === 'SUMMARY_COMPLETION' || type === 'NOTE_COMPLETION' || type === 'TABLE_COMPLETION'
+  if (!isCompletion || group.questions.length < 2) return null
+
+  // Collapse every gap token to one sentinel that never occurs in prose, so
+  // prompts differing only in which blank is theirs become identical. Split on
+  // the sentinel (not on spaces) to recover the paragraph around the gaps.
+  const SENTINEL = '␟'
+  const flat = group.questions.map((q) => q.prompt.replace(GAP_TOKEN, SENTINEL))
+  if (!flat.every((f) => f === flat[0])) return null
+
+  const segments = flat[0].split(SENTINEL)
+  // One blank per question: N gaps split the paragraph into N+1 pieces.
+  if (segments.length !== group.questions.length + 1) return null
+  if (segments.join('').trim().length < 20) return null
+  return segments
+}
+
+/** Renders a shared-paragraph completion group as one inline cloze. */
+function ClozeGroup({
+  group,
+  answers,
+  setAnswer,
+  numberById,
+  submitted,
+  resultById,
+}: {
+  group: RunnerGroup
+  answers: Record<string, AnswerValue>
+  setAnswer: (id: string, v: AnswerValue) => void
+  numberById: Map<string, number>
+  submitted: boolean
+  resultById: Map<string, QuestionResult>
+}) {
+  const segments = clozeTemplate(group)
+  if (!segments) return null
+
+  return (
+    <div>
+      <p className="text-[0.95rem] leading-8 text-navy-700">
+        {segments.map((seg, i) => {
+          const q = i > 0 ? group.questions[i - 1] : null
+          return (
+            <span key={i}>
+              {seg}
+              {q && (
+                <ClozeInput
+                  number={numberById.get(q.id) ?? q.order}
+                  value={typeof answers[q.id] === 'string' ? (answers[q.id] as string) : ''}
+                  onChange={(v) => setAnswer(q.id, v)}
+                  locked={submitted}
+                  isCorrect={submitted ? (resultById.get(q.id)?.isCorrect ?? null) : null}
+                />
+              )}
+            </span>
+          )
+        })}
+      </p>
+
+      {submitted && (
+        <div className="mt-4 space-y-1.5">
+          {group.questions.map((q) => {
+            const r = resultById.get(q.id)
+            if (!r || r.isCorrect) return null
+            return (
+              <p key={q.id} className="text-sm text-navy-600">
+                <span className="font-semibold text-navy-500">
+                  {numberById.get(q.id) ?? q.order}.
+                </span>{' '}
+                correct answer:{' '}
+                <span className="font-semibold text-emerald-700">
+                  {answerToText(r.correctAnswer)}
+                </span>
+              </p>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** One numbered blank inside a cloze paragraph. */
+function ClozeInput({
+  number,
+  value,
+  onChange,
+  locked,
+  isCorrect,
+}: {
+  number: number
+  value: string
+  onChange: (v: string) => void
+  locked: boolean
+  isCorrect: boolean | null
+}) {
+  const border =
+    isCorrect == null
+      ? 'border-navy-300 focus:border-navy-500 focus:ring-2 focus:ring-navy-200'
+      : isCorrect
+        ? 'border-emerald-400 bg-emerald-50 text-emerald-800'
+        : 'border-rose-300 bg-rose-50 text-rose-700'
+  return (
+    <span className="mx-1 inline-flex items-baseline gap-1 align-baseline">
+      <span className="text-xs font-bold text-navy-400">{number}</span>
+      <input
+        type="text"
+        inputMode="text"
+        autoCorrect="off"
+        autoCapitalize="off"
+        autoComplete="off"
+        spellCheck={false}
+        aria-label={`Answer for gap ${number}`}
+        disabled={locked}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={cn(
+          'w-32 rounded-md border-b-2 border-x-0 border-t-0 bg-transparent px-1 py-0.5 text-center text-sm font-medium text-navy-900 outline-none transition disabled:cursor-not-allowed',
+          border,
+        )}
+      />
+    </span>
   )
 }
 

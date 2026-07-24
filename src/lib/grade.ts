@@ -51,6 +51,10 @@ export function normalizeToken(value: string): string {
     .toLowerCase()
     .replace(/[‘’]/g, "'") // smart quotes → straight
     .replace(/[.,;:!?]+$/g, '') // trailing punctuation
+    // The player emits verdict keys as `NOT_GIVEN` while sources store them as
+    // "NOT GIVEN"; underscores are never meaningful inside an answer, so treat
+    // them as spaces rather than letting the two spellings disagree.
+    .replace(/_/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
     .replace(/^(a|an|the)\s+/, '')

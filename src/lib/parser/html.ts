@@ -64,6 +64,10 @@ export function parseHtmlTask(html: string, filename: string): ParseResult {
     inferSectionLetterBanks(built)
     stripLeadingQuestionNumbers(built)
     trimQuestionsFromInstructions(built)
+    stripRubricFromPrompts(built)
+    moveExplanationsOffPrompts(built)
+    normaliseOptionLabels(built)
+    retypeVerdictChoices(built)
 
     if (built.groups.length === 0) {
       warnings.push('No question groups were detected.')
@@ -144,6 +148,199 @@ function trimQuestionsFromInstructions(task: NormalizedTask): void {
     // *entirely* questions is a grouping defect for the audit to report, not
     // something to silently blank out.
     if (kept.length >= 20) group.instruction = kept
+  }
+}
+
+/**
+ * Take the rubric back out of the question text.
+ *
+ * The mirror image of {@link trimQuestionsFromInstructions}: where a rubric and
+ * its question share one block, the *question* can end up carrying the whole
+ * rubric — "Choose TWO letters, A–E. Write the correct letters in boxes 21 and
+ * 22 on your answer sheet. Which TWO statements are made about…". The learner
+ * then reads the same instructions twice, once above the set and once as the
+ * question.
+ *
+ * We drop only the part the prompt and the instruction literally share, cut back
+ * to a sentence boundary so a question is never left half-decapitated. A prompt
+ * that turns out to be *nothing but* rubric becomes empty on purpose — the
+ * question sentence was never extracted, and the audit should say so rather than
+ * have the rubric stand in for it.
+ */
+function stripRubricFromPrompts(task: NormalizedTask): void {
+  /** Shortest overlap worth treating as a shared rubric rather than coincidence. */
+  const MIN_SHARED = 15
+
+  for (const group of task.groups) {
+    const instruction = (group.instruction ?? '').trim()
+    if (instruction.length < MIN_SHARED) continue
+
+    /** Where the rubric ends once a question sentence was reclaimed from it. */
+    let rubricEnd = -1
+
+    for (const question of group.questions) {
+      const prompt = question.prompt.trim()
+      if (!prompt) continue
+
+      let shared = 0
+      while (shared < prompt.length && shared < instruction.length && prompt[shared] === instruction[shared]) {
+        shared++
+      }
+      if (shared < MIN_SHARED) continue
+
+      // Only whole sentences: "Choose TWO letters, A–E." goes, "Which TWO
+      // methods of combating…" stays.
+      const head = prompt.slice(0, shared)
+      const cuts = [...head.matchAll(/[.!?](?:\s+|$)/g)].map((m) => m.index + m[0].length)
+      if (cuts.length === 0) continue
+
+      let cut = cuts[cuts.length - 1]
+      // A grouped multi-select keeps its stem in the rubric block ("Choose TWO
+      // letters, A–E. … Which TWO statements are made about the RSPO?"), so the
+      // final sentence is the question, not more rubric. Keep it when it reads
+      // like one; when it does not, the question sentence was never extracted
+      // and an empty prompt is the honest result for the audit to catch.
+      if (cut >= prompt.length && cuts.length > 1) {
+        const tail = prompt.slice(cuts[cuts.length - 2]).trim()
+        if (/\?$/.test(tail) || /^(which|what|who|whom|whose|why|how|when|where|the writer|according to)\b/i.test(tail)) {
+          cut = cuts[cuts.length - 2]
+          rubricEnd = rubricEnd === -1 ? cut : Math.min(rubricEnd, cut)
+        }
+      }
+
+      question.prompt = prompt.slice(cut).trim()
+    }
+
+    // The sentence now belongs to the question, so it must leave the rubric —
+    // otherwise the learner reads it twice and the audit rightly complains.
+    if (rubricEnd > 0) {
+      const kept = instruction.slice(0, rubricEnd).trim()
+      if (kept.length >= 20) group.instruction = kept
+    }
+  }
+}
+
+/**
+ * Take the answer explanation out of the question text.
+ *
+ * Several pages ship a rationale next to each question so a self-study reader
+ * can check themselves ("Disapene scale insects feed on **Explanation:** The
+ * passage mentions disapene scale insects feed on coconut trees…"). The walker
+ * has no reason to treat it differently from the prompt, so it ends up printed
+ * with the question — handing the learner the answer before they choose.
+ *
+ * The rationale is still worth keeping: it moves to `explanation`, which the
+ * player only reveals after submission.
+ */
+function moveExplanationsOffPrompts(task: NormalizedTask): void {
+  const MARKER = /\s*(?:explanation|answer\s+explanation|why)\s*[:—–-]\s*/i
+
+  for (const group of task.groups) {
+    for (const question of group.questions) {
+      const match = MARKER.exec(question.prompt)
+      if (!match || match.index === 0) continue
+      const head = question.prompt.slice(0, match.index).trim()
+      const tail = question.prompt.slice(match.index + match[0].length).trim()
+      // A prompt that is *only* an explanation is a extraction failure, not a
+      // leak — leave it whole so the audit still sees an empty question.
+      if (head.length < 10) continue
+      question.prompt = head
+      if (tail && !question.explanation) question.explanation = tail
+    }
+  }
+}
+
+/**
+ * Split labelled options into a key and its text.
+ *
+ * Sources write the option letter inside the label — "A) forage grass",
+ * "iii — the forest and its inhabitants" — and depending on the page it lands in
+ * the bank's `key`, its `text`, or both. When the whole sentence sits in `key`,
+ * the player draws it inside the 24px option badge and the answer key ("D")
+ * matches nothing.
+ */
+function normaliseOptionLabels(task: NormalizedTask): void {
+  const LABELLED = /^\s*([A-Za-z]|[ivxIVX]{1,4}|\d{1,2})\s*[).:—–-]\s+([\s\S]*)$/
+  const BANK_FIELDS = ['options', 'headings', 'matches', 'bank'] as const
+
+  const fix = (data: Record<string, unknown> | undefined): Record<string, unknown> | undefined => {
+    if (!data) return data
+    let changed = false
+    const next = { ...data }
+    for (const field of BANK_FIELDS) {
+      const raw = next[field]
+      if (!Array.isArray(raw)) continue
+      const mapped = raw.map((entry) => {
+        if (typeof entry === 'string') {
+          const m = LABELLED.exec(entry)
+          return m && m[2].trim() ? { key: m[1], text: m[2].trim() } : entry
+        }
+        if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entry
+        const rec = entry as Record<string, unknown>
+        const key = typeof rec.key === 'string' ? rec.key : ''
+        if (key.length <= 4) return entry
+        const m = LABELLED.exec(key)
+        if (!m || !m[2].trim()) return entry
+        return { ...rec, key: m[1], text: typeof rec.text === 'string' && rec.text ? rec.text : m[2].trim() }
+      })
+      if (mapped.some((v, i) => v !== raw[i])) {
+        next[field] = mapped
+        changed = true
+      }
+    }
+    return changed ? next : data
+  }
+
+  for (const group of task.groups) {
+    group.data = fix(group.data)
+    for (const question of group.questions) question.data = fix(question.data)
+  }
+}
+
+/**
+ * Re-type TRUE/FALSE/NOT GIVEN questions that were detected as plain choices.
+ *
+ * When the source renders the verdicts as ordinary radio buttons there is
+ * nothing in the DOM to distinguish them from a four-option multiple choice, so
+ * they arrive as `MULTIPLE_CHOICE` with YES/NO/NOT GIVEN as the bank. Typing
+ * them correctly gives the player the exam's three-pill control and lets the
+ * grader treat the answers as verdicts.
+ */
+function retypeVerdictChoices(task: NormalizedTask): void {
+  const VERDICT = /^(YES|NO|TRUE|FALSE|NOT[\s_]?GIVEN|NG)$/i
+  const keysOf = (data: Record<string, unknown> | undefined): string[] => {
+    const raw = data?.options
+    if (!Array.isArray(raw)) return []
+    return raw
+      .map((o) => (typeof o === 'string' ? o : (o as { key?: unknown })?.key))
+      .filter((k): k is string => typeof k === 'string')
+  }
+
+  for (const group of task.groups) {
+    if (group.type !== 'MULTIPLE_CHOICE' && group.type !== 'MULTI_SELECT') continue
+
+    const all = group.questions.map((q) => {
+      const keys = keysOf(q.data) .length > 0 ? keysOf(q.data) : keysOf(group.data)
+      return keys
+    })
+    if (all.some((keys) => keys.length < 2 || !keys.every((k) => VERDICT.test(k)))) continue
+
+    const flat = all.flat().map((k) => k.toUpperCase())
+    const type: QuestionType = flat.some((k) => k === 'YES' || k === 'NO')
+      ? 'YES_NO_NOTGIVEN'
+      : 'TRUE_FALSE_NOTGIVEN'
+
+    group.type = type
+    for (const question of group.questions) {
+      question.type = type
+      // The three verdicts are the control's own labels — a stored bank would
+      // only be a second, divergent source of truth.
+      if (question.data && 'options' in question.data) {
+        const rest = { ...question.data }
+        delete rest.options
+        question.data = Object.keys(rest).length > 0 ? rest : undefined
+      }
+    }
   }
 }
 
@@ -260,6 +457,12 @@ interface ConfigSection {
   instructions?: unknown
   instruction?: unknown
   stem?: string
+  // A summary / notes paragraph shared by the whole section, with the gaps
+  // written inline as "37 _____". See {@link configGapPrompts}.
+  text?: string
+  summary?: string
+  paragraph?: string
+  notes?: string
   headingsList?: ConfigBank
   headings?: ConfigBank
   // The shared choice bank. `endings` (sentence completion) and `wordlist`
@@ -367,11 +570,16 @@ function buildFromConfig(
     const questions: NormalizedQuestion[] = []
     const items = Array.isArray(sec.items) ? sec.items : []
 
+    // Summary / notes sections hold one paragraph for the whole set and give
+    // each item nothing but `{ id, correct }`. The gap text is the question, so
+    // pull each item's own sentence out of that paragraph.
+    const gapPrompts = configGapPrompts(sec, items)
+
     if (items.length > 0) {
       let order = 0
       for (const item of items) {
         const answer = normaliseAnswer(item.correct ?? item.answer)
-        const promptText = configItemPrompt(item)
+        const promptText = configItemPrompt(item) || gapPrompts.get(String(item.id ?? order + 1)) || ''
         if (answer === undefined) {
           ctx.warnings.push(
             `Question ${item.id ?? order + 1} ("${truncate(promptText)}") has no answer key.`,
@@ -519,6 +727,55 @@ function configSectionType(sec: ConfigSection): QuestionType {
  * those questions used to reach the player labelled "Question 7" with the
  * statement itself missing.
  */
+/**
+ * Split a section-level summary paragraph into one prompt per gap.
+ *
+ * `{ type: "summary", text: "…has sudden 37 _____. … involves 38 _____, such as
+ * Nicholson's theory…", items: [{id:37,correct:"F"}, …] }` gives the items no
+ * text of their own: the paragraph *is* the question. Handing every item the
+ * whole paragraph makes four identical prompts, so each gets the paragraph with
+ * its own blank spelled out and the others reduced to `…` — enough context to
+ * answer, distinct enough to tell apart.
+ *
+ * Returns an empty map when the section has no such paragraph, so callers can
+ * fall back to whatever the item carries.
+ */
+function configGapPrompts(
+  sec: ConfigSection,
+  items: readonly ConfigItem[],
+): Map<string, string> {
+  const out = new Map<string, string>()
+  const raw = [sec.text, sec.summary, sec.paragraph, sec.notes].find(
+    (v): v is string => typeof v === 'string' && v.includes('_'),
+  )
+  if (!raw || items.length === 0) return out
+
+  const ids = items
+    .map((item) => String(item.id ?? '').trim())
+    .filter((id) => id !== '' && raw.includes(id))
+  if (ids.length === 0) return out
+
+  // "37 _____" / "37_____" / "37 ______" — the number labels the blank.
+  const blank = /(\d{1,2})\s*_{2,}/g
+  const found = [...raw.matchAll(blank)]
+  if (found.length === 0) return out
+
+  for (const target of found) {
+    const id = target[1]
+    if (!ids.includes(id)) continue
+    let prompt = ''
+    let cursor = 0
+    for (const m of found) {
+      prompt += raw.slice(cursor, m.index)
+      prompt += m[1] === id ? ' _____ ' : ' … '
+      cursor = m.index + m[0].length
+    }
+    prompt += raw.slice(cursor)
+    out.set(id, cleanText(prompt))
+  }
+  return out
+}
+
 function configItemPrompt(item: ConfigItem): string {
   for (const raw of [
     item.prompt,
@@ -736,6 +993,8 @@ function extractGroups(
 
   // Inputs already consumed by a leaf block, so loose-input capture skips them.
   const consumed = new Set<HTMLElement>()
+  /** Radio groups already emitted, keyed by the shared `name`. */
+  const seenRadioNames = new Set<string>()
 
   for (const sectionEl of walkRoots) {
     for (const node of descendantsInOrder(sectionEl)) {
@@ -772,6 +1031,27 @@ function extractGroups(
         continue
       }
 
+      // Loose radio groups: several pages lay a whole multiple-choice set out
+      // flat inside one wrapper — `<p><span class="question-number">36</span>…`
+      // followed by `.multiple-choice-option` divs — with no per-question block
+      // for the walker to recognise. Those sets were being dropped entirely, so
+      // a paper promising Questions 27–40 arrived with only 27–35. We key off
+      // the shared radio `name` and emit the first radio of each group in
+      // document order, which keeps them inside the right "Questions N–M" set.
+      if (isLooseRadio(node) && !consumed.has(node)) {
+        const name = node.getAttribute('name') ?? ''
+        if (name && !seenRadioNames.has(name)) {
+          seenRadioNames.add(name)
+          const radios = sectionEl
+            .querySelectorAll('input[type=radio]')
+            .filter((r) => r.getAttribute('name') === name)
+          for (const r of radios) consumed.add(r)
+          if (!current) current = newGroup('')
+          current.questions.push(parseLooseRadioGroup(radios, answerKey))
+        }
+        continue
+      }
+
       // Loose inputs: completion blanks / selects sitting directly in a
       // (transparent) wrapper with no `.question`/`.answer-input` of their own
       // (e.g. businesscards Qs 6-13 are bare `<p>...<input></p>`).
@@ -792,12 +1072,19 @@ function extractGroups(
 function isGroupBoundary(node: HTMLElement): boolean {
   if (isQuestionsHeading(node)) return true
   const cls = node.classNames
-  // `.instructions` / `.part-head` / `.top-note` blocks announce a new set when
-  // their text leads with "Questions N…" (covers the .section/.card dialect).
+  // `.instructions` / `.part-head` / `.top-note` / `.question-prompt` blocks
+  // announce a new set when their text leads with "Questions N…" (covers the
+  // .section/.card and .question > .q-item dialects).
   if (
     cls.includes('instructions') ||
     cls.includes('part-head') ||
-    cls.includes('top-note')
+    cls.includes('top-note') ||
+    cls.includes('question-prompt') ||
+    cls.includes('rubric') ||
+    cls.includes('sectionRubric') ||
+    cls.includes('question-rubric') ||
+    cls.includes('section-title') ||
+    cls.includes('qhead')
   ) {
     return /^\s*(part\s+\d+|section\s+\d+|questions?\s+\d+)/i.test(
       cleanText(node.text),
@@ -816,6 +1103,74 @@ function isLooseAnswerInput(node: HTMLElement): boolean {
     return !isInsideLeafQuestion(node)
   }
   return false
+}
+
+/** A radio button belonging to a choice set that has no question block of its own. */
+function isLooseRadio(node: HTMLElement): boolean {
+  if (node.tagName?.toLowerCase() !== 'input') return false
+  if ((node.getAttribute('type') ?? '').toLowerCase() !== 'radio') return false
+  return !isInsideLeafQuestion(node)
+}
+
+/**
+ * Build one multiple-choice question from a flat radio group.
+ *
+ * The stem is the nearest preceding text that is not itself an option — usually
+ * a `<p>` carrying a `.question-number` span. Each option's text is its own
+ * label, with the leading letter stripped so it does not print twice ("A A Its
+ * products were not always genuine…").
+ */
+function parseLooseRadioGroup(
+  radios: HTMLElement[],
+  answerKey: AnswerKey,
+): NormalizedQuestion {
+  const name = radios[0]?.getAttribute('name') ?? ''
+  const num = questionNumberFrom(name)
+  const options = radios.map((r, i) => {
+    const key = (r.getAttribute('value') ?? '').trim() || String.fromCharCode(65 + i)
+    const owner = r.closest('label') ?? asElement(r.parentNode)
+    const raw = owner ? cleanText(owner.text) : ''
+    // "A Its products were not always genuine" → drop the repeated letter.
+    const text = raw.replace(new RegExp(`^${key}\\b[).:]?\\s*`), '').trim()
+    return { key, text: text || raw || key }
+  })
+  return {
+    order: 0,
+    type: 'MULTIPLE_CHOICE',
+    prompt: stemBeforeOptions(radios[0]) || `Question ${num ?? ''}`.trim(),
+    data: { options, numbered: num },
+    answer: lookupAnswer(answerKey, name, num) ?? '',
+    points: 1,
+  }
+}
+
+/**
+ * Walk backwards from the first option of a choice set to the text that asks the
+ * question. Stops at anything holding an input (that would be the *previous*
+ * question's last option) so one question can never borrow another's stem.
+ */
+function stemBeforeOptions(firstRadio: HTMLElement): string {
+  const optionBlock = firstRadio.closest('div, li, p') ?? firstRadio
+  let cursor: HTMLElement | null = optionBlock
+  for (let hops = 0; hops < 6 && cursor; hops++) {
+    const siblings = cursor.parentNode?.childNodes ?? []
+    const index = siblings.indexOf(cursor)
+    for (let i = index - 1; i >= 0; i--) {
+      const prev = asElement(siblings[i])
+      if (!prev) continue
+      if (prev.querySelector('input, select')) return ''
+      const text = cleanText(prev.text)
+      if (text.length >= 8) return text
+    }
+    cursor = asElement(cursor.parentNode)
+  }
+  return ''
+}
+
+/** node-html-parser exposes children as `Node`; nodeType 1 narrows to an element. */
+function asElement(node: unknown): HTMLElement | null {
+  const rec = node as { nodeType?: number } | null | undefined
+  return rec && rec.nodeType === 1 ? (node as HTMLElement) : null
 }
 
 function parseLooseInput(
@@ -1092,11 +1447,23 @@ function parseDragMatch(
 // ---------------------------------------------------------------------------
 
 function extractPassageHtml(root: HTMLElement): string | undefined {
+  // Most specific first: an inner passage element beats the panel that holds it,
+  // because the panel usually also carries the title, a resize handle and the
+  // page's own highlighter chrome.
   const candidates = [
     root.querySelector('.passage-container .passage'),
     root.querySelector('.passage'),
+    root.querySelector('.passage-text'),
+    root.querySelector('#passage-text'),
+    root.querySelector('#passage-content'),
+    root.querySelector('.passage-content'),
+    root.querySelector('.passage-body'),
+    root.querySelector('.reading-passage'),
     root.querySelector('.passage-container'),
     root.querySelector('#passage'),
+    root.querySelector('.passage-panel'),
+    root.querySelector('#passage-panel'),
+    root.querySelector('#passage-container'),
     root.querySelector('article'),
   ]
   for (const el of candidates) {
@@ -1522,6 +1889,7 @@ const LEAF_CLASSES = [
   'question',
   'answer-input',
   'question-item',
+  'q-item',
   'q-block',
   'mcq-question',
   'drag-match-container',
@@ -1552,7 +1920,7 @@ function isLeafQuestionBlock(node: HTMLElement): boolean {
   }
 
   // A wrapper that contains nested leaf blocks is transparent.
-  if (node.querySelector('.answer-input, .question-item, .q-block, .drag-match-container')) {
+  if (node.querySelector('.answer-input, .question-item, .q-item, .q-block, .drag-match-container')) {
     return false
   }
   const nestedQuestions = node

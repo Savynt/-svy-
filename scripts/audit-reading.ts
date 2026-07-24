@@ -35,6 +35,12 @@ const BANK_KEYS: Readonly<Record<string, readonly string[]>> = {
 /** A prompt that carries no question — just a number or a stub. */
 const PLACEHOLDER_PROMPT = /^(?:questions?|q)\s*\d+\s*$|^complete the blank\.?$|^\s*$/i
 
+/** Rationale text that belongs in `explanation`, never in the question. */
+const LEAKED_EXPLANATION = /\b(?:explanation|answer\s+explanation)\s*[:—–-]/i
+
+/** An option key is a label: "A", "iii", "12" — never a sentence. */
+const MAX_KEY_LENGTH = 4
+
 interface Question {
   prompt?: string
   type: string
@@ -104,6 +110,41 @@ function hasBank(group: Group, question: Question): boolean {
   return keys.some((k) => Array.isArray(merged[k]) && (merged[k] as unknown[]).length > 0)
 }
 
+/** The option keys a learner can actually pick for this question. */
+function bankKeys(group: Group, question: Question): string[] {
+  const fields = BANK_KEYS[question.type]
+  if (!fields) return []
+  const merged = { ...(group.data ?? {}), ...(question.data ?? {}) }
+  for (const field of fields) {
+    const raw = merged[field]
+    if (!Array.isArray(raw) || raw.length === 0) continue
+    return raw.map((entry, i) => {
+      if (typeof entry === 'string') return entry
+      const key = (entry as { key?: unknown })?.key
+      return typeof key === 'string' && key ? key : String.fromCharCode(65 + i)
+    })
+  }
+  return []
+}
+
+/**
+ * Can the stored answer be chosen from the options shown?
+ *
+ * A bank truncated during extraction (headings i–iv listed, answer "vii") is
+ * invisible to every other check: the question has text, has options and has an
+ * answer key — it is simply impossible to get right.
+ */
+function answerIsOnBank(keys: string[], answer: unknown): boolean {
+  if (keys.length === 0) return true
+  const given = (Array.isArray(answer) ? answer : [answer]).filter(
+    (a): a is string => typeof a === 'string' && a.trim() !== '',
+  )
+  if (given.length === 0) return true
+  const normalise = (s: string): string => s.trim().toLowerCase().replace(/[_\s]+/g, ' ')
+  const allowed = new Set(keys.map(normalise))
+  return given.every((a) => allowed.has(normalise(a)))
+}
+
 export function auditTask(task: Task, file: string): AuditResult {
   const defects: string[] = []
   const passage = plain(task.passageHtml ?? '')
@@ -156,18 +197,22 @@ export function auditTask(task: Task, file: string): AuditResult {
         answer === '' || answer == null || (Array.isArray(answer) && answer.length === 0)
       if (emptyAnswer) defects.push(`${label}: "${prompt.slice(0, 40)}" has no answer key`)
 
-      if (!hasBank(group, question)) {
-        defects.push(`${label}: "${prompt.slice(0, 40)}" has no options to choose from`)
+      if (LEAKED_EXPLANATION.test(prompt)) {
+        defects.push(`${label}: "${prompt.slice(0, 40)}" prints the answer explanation in the question`)
       }
 
-      if (group.type === 'MATCHING_HEADINGS') {
-        const bank = ((group.data?.headings ?? question.data?.headings) ?? []) as Array<{
-          key?: string
-        }>
-        if (Array.isArray(bank) && bank.length > 0 && typeof answer === 'string') {
-          if (!bank.some((h) => h.key === answer)) {
-            defects.push(`${label}: answer "${answer}" is not one of the listed headings`)
-          }
+      if (!hasBank(group, question)) {
+        defects.push(`${label}: "${prompt.slice(0, 40)}" has no options to choose from`)
+      } else {
+        const keys = bankKeys(group, question)
+        const oversized = keys.find((k) => k.length > MAX_KEY_LENGTH)
+        if (oversized !== undefined) {
+          defects.push(`${label}: option key is a whole label ("${oversized.slice(0, 40)}…")`)
+        }
+        if (!answerIsOnBank(keys, answer)) {
+          defects.push(
+            `${label}: answer ${JSON.stringify(answer)} is not among the options ${JSON.stringify(keys.slice(0, 8))}`,
+          )
         }
       }
 
@@ -232,6 +277,28 @@ function main(): void {
   console.log(`Audited ${results.length} READING task(s) from ${dir}\n`)
   console.log(`  clean:  ${clean.length}`)
   console.log(`  broken: ${broken.length}\n`)
+
+  // Which defect keeps the most tests out? That is the next parser fix to make,
+  // and the individual listing is far too long to read it off by eye.
+  if (broken.length > 0) {
+    const kinds = new Map<string, Set<string>>()
+    for (const r of broken) {
+      for (const defect of r.defects) {
+        const kind = defect
+          .replace(/^group \d+ \([A-Z_]+\): /, '')
+          .replace(/"[^"]*"/g, '…')
+          .replace(/\[[^\]]*\]/g, '[…]')
+          .replace(/\d+/g, 'N')
+        if (!kinds.has(kind)) kinds.set(kind, new Set())
+        kinds.get(kind)!.add(r.slug)
+      }
+    }
+    console.log('--- defects by number of tests they block ---')
+    for (const [kind, slugs] of [...kinds].sort((a, b) => b[1].size - a[1].size)) {
+      console.log(`  ${String(slugs.size).padStart(3)}  ${kind}`)
+    }
+    console.log()
+  }
 
   if (broken.length > 0) {
     console.log('--- rejected ---')

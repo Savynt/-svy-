@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
+import { cn } from '@/lib/cn'
 import { requireUser } from '@/lib/auth/session'
 import { Card, CardBody } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -53,9 +54,24 @@ function trackSlug(track: Track): string {
   return track.toLowerCase()
 }
 
-export default async function PracticePage() {
+const SKILL_VALUES: readonly Skill[] = ['LISTENING', 'READING', 'SPEAKING', 'WRITING']
+
+function parseSkill(value: string | string[] | undefined): Skill | null {
+  const raw = Array.isArray(value) ? value[0] : value
+  const upper = raw?.toUpperCase()
+  return SKILL_VALUES.find((s) => s === upper) ?? null
+}
+
+export default async function PracticePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   // Auth gate — opts the route into dynamic rendering.
   await requireUser()
+
+  // A clicked skill card narrows the whole page to that skill.
+  const activeSkill = parseSkill((await searchParams).skill)
 
   // groupBy gives accurate per track+skill counts in one query; the task list
   // is fetched once (bounded) and grouped in memory to avoid N+1.
@@ -66,7 +82,7 @@ export default async function PracticePage() {
       _count: { _all: true },
     }),
     prisma.task.findMany({
-      where: { status: 'PUBLISHED' },
+      where: { status: 'PUBLISHED', ...(activeSkill ? { skill: activeSkill } : {}) },
       orderBy: [{ track: 'asc' }, { publishedAt: 'desc' }, { createdAt: 'desc' }],
       take: 60,
       select: {
@@ -130,6 +146,24 @@ export default async function PracticePage() {
               </a>
             ))}
           </div>
+
+          {activeSkill && (
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-navy-500">
+                Showing{' '}
+                <span className="font-semibold text-navy-700">
+                  {SKILLS.find((s) => s.skill === activeSkill)?.label}
+                </span>{' '}
+                tests only
+              </span>
+              <a
+                href="/practice"
+                className="inline-flex items-center gap-1 rounded-lg border border-navy-200 bg-white px-2.5 py-1 text-xs font-semibold text-navy-600 transition hover:border-navy-300 hover:bg-navy-50"
+              >
+                Clear filter
+              </a>
+            </div>
+          )}
         </div>
       </section>
 
@@ -157,7 +191,9 @@ export default async function PracticePage() {
         ) : (
           <div className="space-y-14">
             {TRACKS.map(({ track, title, blurb }) => {
-              const trackTotal = countForTrack(track)
+              // When a skill filter is on, the section total is that skill's
+              // count, so "Showing X of Y" matches the rows actually listed.
+              const trackTotal = activeSkill ? countFor(track, activeSkill) : countForTrack(track)
               const trackTasks = tasksByTrack.get(track) ?? []
 
               return (
@@ -170,23 +206,53 @@ export default async function PracticePage() {
                     <SectionHeading eyebrow={`${trackTotal} published tests`} title={title} subtitle={blurb} />
                   </div>
 
-                  {/* Skill breakdown */}
+                  {/* Skill breakdown — each card filters the library to that
+                      skill. A skill with no tests stays a plain, unclickable
+                      card ("Coming soon"). */}
                   <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
                     {SKILLS.map(({ skill, label, icon: Icon }) => {
                       const n = countFor(track, skill)
+                      const active = activeSkill === skill
+                      const clickable = n > 0
+
+                      const inner = (
+                        <CardBody className="flex items-center gap-3 p-4">
+                          <span
+                            className={cn(
+                              'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+                              active ? 'bg-navy-700 text-white' : 'bg-sky-100 text-navy-700',
+                            )}
+                          >
+                            <Icon className="h-5 w-5" aria-hidden="true" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-navy-700">{label}</p>
+                            <p className="text-xs text-navy-400">
+                              {n === 0 ? 'Coming soon' : `${n} ${n === 1 ? 'test' : 'tests'}`}
+                            </p>
+                          </div>
+                        </CardBody>
+                      )
+
+                      if (!clickable) {
+                        return (
+                          <Card key={skill} className="h-full opacity-60">
+                            {inner}
+                          </Card>
+                        )
+                      }
+
+                      // Toggle: clicking the active skill clears the filter.
+                      const href = active
+                        ? `/practice#track-${trackSlug(track)}`
+                        : `/practice?skill=${skill.toLowerCase()}#track-${trackSlug(track)}`
                       return (
-                        <Card key={skill} className="h-full">
-                          <CardBody className="flex items-center gap-3 p-4">
-                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-navy-700">
-                              <Icon className="h-5 w-5" aria-hidden="true" />
-                            </span>
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-semibold text-navy-700">{label}</p>
-                              <p className="text-xs text-navy-400">
-                                {n === 0 ? 'Coming soon' : `${n} ${n === 1 ? 'test' : 'tests'}`}
-                              </p>
-                            </div>
-                          </CardBody>
+                        <Card
+                          key={skill}
+                          href={href}
+                          className={cn('h-full', active && 'border-navy-500 ring-2 ring-navy-200')}
+                        >
+                          {inner}
                         </Card>
                       )
                     })}
