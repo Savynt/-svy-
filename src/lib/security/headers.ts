@@ -58,6 +58,10 @@ export function buildCspHeaderValue(nonce: string, isDev = process.env.NODE_ENV 
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://i.imgur.com https://i.ibb.co https://i.postimg.cc",
     "font-src 'self' data:",
+    // Listening tests stream their audio from where the source content already
+    // hosts it (raw GitHub for now). Without media-src the browser falls back to
+    // default-src 'self' and the <audio> player is silent.
+    "media-src 'self' https://raw.githubusercontent.com",
     "connect-src 'self'",
     // The SAT Math test embeds the Desmos graphing calculator in an iframe
     // (TestRunner + the builder preview). Without frame-src the browser falls
