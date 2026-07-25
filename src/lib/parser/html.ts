@@ -1019,6 +1019,25 @@ function extractGroups(
         continue
       }
 
+      // Drag-and-drop summary: `.summary-completion-container` holds a summary
+      // paragraph whose gaps are `<span class="summary-drop-zone">` (not inputs)
+      // plus a word bank of `.drag-item[data-value]`. The walker's input/leaf
+      // detection never sees these, so the whole group used to be dropped — a
+      // paper promising Questions 27–40 arrived with only 33–40. Parse it as a
+      // word-bank summary completion.
+      if (hasClass(node, 'summary-completion-container') && !consumed.has(node)) {
+        consumed.add(node)
+        for (const inner of node.querySelectorAll('.summary-completion-container')) {
+          consumed.add(inner)
+        }
+        const parsed = parseSummaryDropZones(node, answerKey)
+        if (parsed.length > 0) {
+          if (!current) current = newGroup('')
+          for (const q of parsed) current.questions.push(q)
+        }
+        continue
+      }
+
       // Question payloads — only true leaves (wrapper sections are transparent,
       // so the walker descends to the real inputs/headings inside them).
       if (isLeafQuestionBlock(node)) {
@@ -1103,6 +1122,64 @@ function isLooseAnswerInput(node: HTMLElement): boolean {
     return !isInsideLeafQuestion(node)
   }
   return false
+}
+
+/**
+ * Parse a drag-and-drop summary completion.
+ *
+ * `.summary-completion-container` holds a `.summary-text` paragraph whose gaps
+ * are `<span class="summary-drop-zone" data-q-start="27">27</span>`, plus a bank
+ * of `<div class="drag-item" data-value="A">form and function</div>`. The answer
+ * for each gap is a bank letter (`correctAnswers = { 27: "K", … }`).
+ *
+ * Each gap becomes one SUMMARY_COMPLETION question carrying the whole paragraph
+ * with its own blank as `_____` and the others as `…` (the shape the player's
+ * cloze renderer reconstructs), and the shared letter bank on `data.options`.
+ */
+function parseSummaryDropZones(
+  container: HTMLElement,
+  answerKey: AnswerKey,
+): NormalizedQuestion[] {
+  const bank = container
+    .querySelectorAll('.drag-item')
+    .map((el) => ({ key: (el.getAttribute('data-value') ?? '').trim(), text: cleanText(el.text) }))
+    .filter((o) => o.key)
+
+  const summary = container.querySelector('.summary-text') ?? container
+  const zones = summary.querySelectorAll('.summary-drop-zone')
+  if (zones.length === 0) return []
+
+  // Replace each gap with a unique sentinel, then read the paragraph as text so
+  // the gaps survive tag-stripping and we can split cleanly around them.
+  const SENT = '␟'
+  const clone = parse(summary.innerHTML)
+  const cloneZones = clone.querySelectorAll('.summary-drop-zone')
+  for (const z of cloneZones) z.set_content(SENT)
+  const segments = cleanText(clone.text).split(SENT)
+  if (segments.length !== zones.length + 1) return []
+
+  const gapPrompt = (blankIndex: number): string => {
+    let out = ''
+    for (let i = 0; i < segments.length; i++) {
+      out += segments[i]
+      if (i < zones.length) out += i === blankIndex ? ' _____ ' : ' … '
+    }
+    return cleanText(out)
+  }
+
+  return zones.map((zone, i) => {
+    const num = Number(zone.getAttribute('data-q-start') ?? zone.getAttribute('data-q') ?? '')
+    const numbered = Number.isFinite(num) && num > 0 ? num : undefined
+    const answer = numbered !== undefined ? lookupAnswer(answerKey, '', numbered) : undefined
+    return {
+      order: i,
+      type: 'SUMMARY_COMPLETION' as const,
+      prompt: gapPrompt(i),
+      data: { options: bank, numbered },
+      answer: normaliseAnswer(answer) ?? '',
+      points: 1,
+    }
+  })
 }
 
 /** A radio button belonging to a choice set that has no question block of its own. */

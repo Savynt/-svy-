@@ -75,7 +75,10 @@ export async function persistNormalizedTask(
     return run(db)
   }
   const client: PrismaClient = db ?? prisma
-  return client.$transaction((tx) => run(tx))
+  // A single task carries up to ~14 questions across several groups; over a slow
+  // (remote prod) connection the default 5s interactive-transaction budget is
+  // occasionally exceeded, so give the write room to finish atomically.
+  return client.$transaction((tx) => run(tx), { maxWait: 10_000, timeout: 30_000 })
 }
 
 async function writeTask(

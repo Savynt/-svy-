@@ -642,23 +642,54 @@ function ClozeGroup({
   const segments = clozeTemplate(group)
   if (!segments) return null
 
+  // A word-bank summary ("complete the summary using the list of words A–K")
+  // carries the bank on its options; each gap is then a choice from that bank,
+  // not a free-typed word. Show the bank and turn the gaps into pickers.
+  const bank = readBank(group.data ?? group.questions[0]?.data ?? null, ['options', 'bank'])
+
   return (
     <div>
+      {bank.length > 0 && (
+        <div className="mb-4 rounded-xl border border-navy-100 bg-sky-50 p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-navy-400">
+            List of words
+          </p>
+          <ul className="grid gap-x-4 gap-y-1 text-sm text-navy-700 sm:grid-cols-2">
+            {bank.map((o) => (
+              <li key={o.key} className="flex gap-2">
+                <span className="font-semibold text-navy-500">{o.key}</span>
+                <span>{o.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <p className="text-[0.95rem] leading-8 text-navy-700">
         {segments.map((seg, i) => {
           const q = i > 0 ? group.questions[i - 1] : null
           return (
             <span key={i}>
               {seg}
-              {q && (
-                <ClozeInput
-                  number={numberById.get(q.id) ?? q.order}
-                  value={typeof answers[q.id] === 'string' ? (answers[q.id] as string) : ''}
-                  onChange={(v) => setAnswer(q.id, v)}
-                  locked={submitted}
-                  isCorrect={submitted ? (resultById.get(q.id)?.isCorrect ?? null) : null}
-                />
-              )}
+              {q &&
+                (bank.length > 0 ? (
+                  <ClozeSelect
+                    number={numberById.get(q.id) ?? q.order}
+                    bank={bank}
+                    value={typeof answers[q.id] === 'string' ? (answers[q.id] as string) : ''}
+                    onChange={(v) => setAnswer(q.id, v)}
+                    locked={submitted}
+                    isCorrect={submitted ? (resultById.get(q.id)?.isCorrect ?? null) : null}
+                  />
+                ) : (
+                  <ClozeInput
+                    number={numberById.get(q.id) ?? q.order}
+                    value={typeof answers[q.id] === 'string' ? (answers[q.id] as string) : ''}
+                    onChange={(v) => setAnswer(q.id, v)}
+                    locked={submitted}
+                    isCorrect={submitted ? (resultById.get(q.id)?.isCorrect ?? null) : null}
+                  />
+                ))}
             </span>
           )
         })}
@@ -684,6 +715,52 @@ function ClozeGroup({
         </div>
       )}
     </div>
+  )
+}
+
+/** One numbered blank that is filled by picking a letter from a word bank. */
+function ClozeSelect({
+  number,
+  bank,
+  value,
+  onChange,
+  locked,
+  isCorrect,
+}: {
+  number: number
+  bank: { key: string; text: string }[]
+  value: string
+  onChange: (v: string) => void
+  locked: boolean
+  isCorrect: boolean | null
+}) {
+  const border =
+    isCorrect == null
+      ? 'border-navy-300 focus:border-navy-500 focus:ring-2 focus:ring-navy-200'
+      : isCorrect
+        ? 'border-emerald-400 bg-emerald-50 text-emerald-800'
+        : 'border-rose-300 bg-rose-50 text-rose-700'
+  return (
+    <span className="mx-1 inline-flex items-baseline gap-1 align-baseline">
+      <span className="text-xs font-bold text-navy-400">{number}</span>
+      <select
+        disabled={locked}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={`Answer for gap ${number}`}
+        className={cn(
+          'rounded-md border bg-white px-1.5 py-0.5 text-sm font-medium text-navy-900 outline-none transition disabled:cursor-not-allowed',
+          border,
+        )}
+      >
+        <option value="">—</option>
+        {bank.map((o) => (
+          <option key={o.key} value={o.key}>
+            {o.key}. {o.text}
+          </option>
+        ))}
+      </select>
+    </span>
   )
 }
 
