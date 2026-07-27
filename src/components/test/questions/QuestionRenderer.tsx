@@ -675,8 +675,22 @@ export function QuestionRenderer({
     }
   }
 
+  const passage =
+    typeof (question.data as Record<string, unknown> | undefined)?.passage === 'string'
+      ? ((question.data as Record<string, unknown>).passage as string)
+      : null
+
   return (
     <div className="space-y-3">
+      {/* SAT-style stimulus: each question carries its own short text (unlike the
+          shared IELTS passage). Authored/seeded HTML, so <u>/<em>/<p> survive —
+          the underlined-portion questions depend on the underline rendering. */}
+      {passage && (
+        <div
+          className="rounded-xl border border-navy-100 bg-navy-50/40 px-4 py-3 text-[0.9375rem] leading-7 text-navy-700 [&_em]:italic [&_li]:mb-1 [&_p]:mb-3 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_u]:underline [&_ul]:list-disc [&_ul]:pl-5"
+          dangerouslySetInnerHTML={{ __html: passage }}
+        />
+      )}
       <div className="flex items-start gap-3">
         <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-navy-700 text-xs font-bold text-white">
           {displayNumber}
